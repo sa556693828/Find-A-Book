@@ -10,7 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<UserHistory[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [, setIsStreaming] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [inputValue, setInputValue] = useState("");
