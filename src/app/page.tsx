@@ -31,11 +31,6 @@ export default function Home() {
   ];
   const handleStream = useCallback(async (message: string) => {
     setLoading(true);
-    const userName = localStorage.getItem("userName");
-    if (!userName) {
-      console.error("User name is not set");
-      return;
-    }
     try {
       setCurrentChat((prev) => [...prev, { role: "human", content: message }]);
       setPrompts([]);
