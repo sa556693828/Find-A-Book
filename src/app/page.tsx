@@ -1,101 +1,275 @@
-import Image from "next/image";
+"use client";
+import ChatComponent from "@/components/Chat";
+import { useCallback, useRef, useState } from "react";
+export interface UserHistory {
+  role: string;
+  content: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [loading, setLoading] = useState(false);
+  const [currentChat, setCurrentChat] = useState<UserHistory[]>([]);
+  const [prompts, setPrompts] = useState<string[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+    }
+  };
+  const basicPrompt = [
+    "幫我總結這本書的內容",
+    "告訴我為什麼要讀這本書",
+    "書中都用了哪些例子證明",
+    "幫我用一段話總結書中想傳達的核心觀點",
+    "我是一個上班族，我該用什麼角度去理解書中的內容",
+  ];
+  const handleStream = useCallback(async (message: string) => {
+    setLoading(true);
+    const userName = localStorage.getItem("userName");
+    if (!userName) {
+      console.error("User name is not set");
+      return;
+    }
+    try {
+      setCurrentChat((prev) => [...prev, { role: "human", content: message }]);
+      setPrompts([]);
+      const env = process.env.NODE_ENV;
+      const baseUrl =
+        env === "development"
+          ? "http://54.238.1.161:9000"
+          : process.env.NEXT_PUBLIC_NGROK_URL;
+      const response = await fetch(
+        `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
+          currentChat
+        )}`
+      );
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      // 檢查響應狀態
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // 檢查 response.body 是否為空
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
+      setIsStreaming(true);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      setLoading(false);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        // 將新的chunk添加到buffer中
+        buffer += decoder.decode(value, { stream: true });
+
+        // 嘗試按行分割並解析
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // 保存最後一個不完整的行
+
+        // 處理每一行數據
+        for (const line of lines) {
+          if (line.trim()) {
+            // 忽略空行
+            try {
+              const parsedData = JSON.parse(line);
+              if (parsedData.content) {
+                setCurrentChat((prev) => {
+                  const lastMessage = prev[prev.length - 1];
+
+                  // 如果最後一條消息是AI的回應，則更新其內容
+                  if (lastMessage && lastMessage.role === "ai") {
+                    const updatedChat = [...prev];
+                    updatedChat[updatedChat.length - 1] = {
+                      role: "ai",
+                      content: lastMessage.content + parsedData.content,
+                    };
+                    return updatedChat;
+                  }
+
+                  return [
+                    ...prev,
+                    {
+                      role: "ai",
+                      content: parsedData.content,
+                    },
+                  ];
+                });
+              }
+            } catch (e) {
+              console.warn("Failed to parse line:", e);
+            }
+          }
+        }
+      }
+
+      // 處理最後剩餘的buffer
+      if (buffer.trim()) {
+        try {
+          const parsedData = JSON.parse(buffer);
+          if (parsedData.content) {
+            setCurrentChat((prev) => {
+              const lastMessage = prev[prev.length - 1];
+
+              // 如果最後一條消息是AI的回應，則更新其內容
+              if (lastMessage && lastMessage.role === "ai") {
+                const updatedChat = [...prev];
+                updatedChat[updatedChat.length - 1] = {
+                  role: "ai",
+                  content: lastMessage.content + parsedData.content,
+                };
+                return updatedChat;
+              }
+
+              return [
+                ...prev,
+                {
+                  role: "ai",
+                  content: parsedData.content,
+                },
+              ];
+            });
+          }
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            console.warn("Failed to parse final buffer:", e.message);
+          } else {
+            console.warn("Failed to parse final buffer:", e);
+          }
+        }
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Stream error:", error.message);
+      } else {
+        console.error("Unknown error:", error);
+      }
+    } finally {
+      setIsStreaming(false);
+    }
+  }, []);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isSubmitting) {
+      setIsSubmitting(true);
+      try {
+        await handleStream(inputValue);
+      } catch (error) {
+        console.error("Submit error:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter") {
+      // 如果正在輸入中文，直接返回
+      if (isComposing) {
+        return;
+      }
+
+      if (e.shiftKey) {
+        return;
+      } else if (!isSubmitting) {
+        e.preventDefault();
+        const currentInput = inputValue.trim();
+        setInputValue("");
+        if (currentInput) {
+          await handleSubmit(e);
+        }
+      }
+    }
+  };
+
+  // 添加輸入法事件處理
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  const handleCompositionEnd = () => {
+    setIsComposing(false);
+  };
+
+  return (
+    <div
+      className="flex flex-col items-center justify-center w-full"
+      style={{
+        minHeight: "calc(100vh - 60px)",
+      }}
+    >
+      <div className="text-black flex-1 w-full">
+        <div className="p-4 h-[calc(100vh-70px)] relative flex flex-col border-b border-black/20">
+          {/* 聊天訊息區域 */}
+          {currentChat.length > 0 ? (
+            <div className="flex-1 overflow-y-auto mb-4">
+              <ChatComponent
+                loading={loading}
+                chatLog={currentChat}
+                currentChat={currentChat}
+                prompts={prompts}
+                handleQuery={handleStream}
+                basicPrompt={basicPrompt}
+              />
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto mb-4">
+              <p>請輸入訊息...</p>
+            </div>
+          )}
+          <form
+            onSubmit={handleSubmit}
+            className="flex gap-2 absolute bottom-4 w-1/2 left-1/2 -translate-x-1/2"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <div className="flex items-start w-full bg-[#202123] rounded-xl shadow-sm border border-gray-800/50">
+              <textarea
+                ref={textareaRef}
+                rows={1}
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  adjustHeight();
+                }}
+                onCompositionStart={handleCompositionStart}
+                onCompositionEnd={handleCompositionEnd}
+                onKeyDown={handleKeyDown}
+                placeholder="輸入訊息... (Enter 發送, Shift + Enter 換行)"
+                className="flex-1 bg-transparent px-4 py-3 text-white placeholder-gray-400 focus:outline-none resize-none min-h-[48px] max-h-[200px] overflow-y-auto"
+                style={{
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#4B5563 transparent",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!inputValue.trim()}
+                className={`px-4 py-3 transition-colors self-end
+              ${
+                inputValue.trim()
+                  ? "text-white hover:text-gray-300 cursor-pointer"
+                  : "text-gray-600 cursor-not-allowed"
+              }`}
+                title={!inputValue.trim() ? "請輸入訊息" : "發送訊息"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                </svg>
+              </button>
+            </div>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
