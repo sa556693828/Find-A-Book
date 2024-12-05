@@ -5,10 +5,10 @@ export interface UserHistory {
   role: string;
   content: string;
 }
-export interface SummaryResponse {
-  summary: string;
-  links: string[];
-  keywords: string[];
+export interface BooksLinks {
+  title: string;
+  links: string;
+  image: string;
 }
 
 export default function Home() {
@@ -19,11 +19,10 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [summary, setSummary] = useState<SummaryResponse>({
-    summary: "",
-    links: [],
-    keywords: [],
-  });
+  const [summary, setSummary] = useState("");
+  const [keywords, setKeywords] = useState([]);
+  const [booksLinks, setBooksLinks] = useState<BooksLinks[]>([]);
+  const [isSummary, setIsSummary] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -40,13 +39,14 @@ export default function Home() {
     "我是一個上班族，我該用什麼角度去理解書中的內容",
   ];
   useEffect(() => {
-    if (currentChat.length >= 6 && !isStreaming) {
+    if (currentChat.length >= 6 && !isStreaming && !isSummary) {
       handleSummary(currentChat);
     }
-  }, [currentChat, isStreaming]);
+  }, [currentChat, isStreaming, isSummary]);
   // const handleClearChat = () => {
   //   setCurrentChat([]);
   // };
+
   const handleSummary = useCallback(async (chatHistory: UserHistory[]) => {
     setLoading(true);
     try {
@@ -68,7 +68,55 @@ export default function Home() {
       if (!response.body) {
         throw new Error("Response body is null");
       }
-      setSummary(await response.json());
+      setIsStreaming(true);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      setLoading(false);
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            break;
+          }
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            // 檢查是否收到結束信號
+            if (line.includes("[DONE]")) {
+              return; // 直接返回，結束整個函數
+            }
+
+            try {
+              const parsedData = JSON.parse(line);
+              if (parsedData.summary) setSummary(parsedData.summary);
+              if (parsedData.keywords) setKeywords(parsedData.keywords);
+              if (parsedData.books) setBooksLinks(parsedData.books);
+            } catch (e) {
+              console.warn("Failed to parse line:", e);
+            }
+          }
+        }
+
+        // 處理最後剩餘的buffer（只在沒有遇到[DONE]的情況下執行）
+        if (buffer.trim() && !buffer.includes("[DONE]")) {
+          try {
+            const parsedData = JSON.parse(buffer);
+            if (parsedData.summary) setSummary(parsedData.summary);
+            if (parsedData.keywords) setKeywords(parsedData.keywords);
+            if (parsedData.books) setBooksLinks(parsedData.books);
+          } catch (e) {
+            console.warn("Failed to parse final buffer:", e);
+          }
+        }
+      } finally {
+        reader.releaseLock(); // 釋放reader鎖
+        setIsSummary(true);
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Stream error:", error.message);
@@ -91,7 +139,7 @@ export default function Home() {
         const env = process.env.NODE_ENV;
         const baseUrl =
           env === "development"
-            ? "http://127.0.0.1:9000" // "http://54.238.1.161:9000"
+            ? "http://127.0.0.1:9000"
             : process.env.NEXT_PUBLIC_NGROK_URL;
         const response = await fetch(
           `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
@@ -272,11 +320,19 @@ export default function Home() {
               <p>請輸入訊息...</p>
             </div>
           )}
-          {summary.summary && (
+          {summary && (
             <div className="flex-1 overflow-y-auto mb-4">
-              <p>總結：{summary.summary}</p>
-              <p>相關連結：{summary.links.join(", ")}</p>
-              <p>關鍵字：{summary.keywords.join(", ")}</p>
+              <p>總結：{summary}</p>
+            </div>
+          )}
+          {keywords.length > 0 && (
+            <div className="flex-1 overflow-y-auto mb-4">
+              <p>關鍵字：{keywords.join(", ")}</p>
+            </div>
+          )}
+          {booksLinks.length > 0 && (
+            <div className="flex-1 overflow-y-auto mb-4">
+              <p>相關連結：{booksLinks.map((book) => book.links).join(", ")}</p>
             </div>
           )}
           <form
