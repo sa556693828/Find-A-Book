@@ -1,6 +1,6 @@
 "use client";
 import ChatComponent from "@/components/Chat";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 export interface UserHistory {
   role: string;
   content: string;
@@ -10,7 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<UserHistory[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
-  const [, setIsStreaming] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -29,133 +29,150 @@ export default function Home() {
     "幫我用一段話總結書中想傳達的核心觀點",
     "我是一個上班族，我該用什麼角度去理解書中的內容",
   ];
-  const handleStream = useCallback(async (message: string) => {
-    setLoading(true);
-    try {
-      setCurrentChat((prev) => [...prev, { role: "human", content: message }]);
-      setPrompts([]);
-      const env = process.env.NODE_ENV;
-      const baseUrl =
-        env === "development"
-          ? "http://54.238.1.161:9000"
-          : process.env.NEXT_PUBLIC_NGROK_URL;
-      const response = await fetch(
-        `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
-          currentChat
-        )}`
-      );
+  useEffect(() => {
+    if (currentChat.length >= 6 && !isStreaming) {
+      console.log("currentChat", currentChat);
+    }
+  }, [currentChat, isStreaming]);
+  // const handleClearChat = () => {
+  //   setCurrentChat([]);
+  // };
+  // const handleSummary = useCallback(async () => {
+  //   console.log("summary");
+  // }, []);
+  const handleStream = useCallback(
+    async (message: string, chatHistory: UserHistory[]) => {
+      setLoading(true);
+      try {
+        setCurrentChat((prev) => [
+          ...prev,
+          { role: "human", content: message },
+        ]);
+        setPrompts([]);
+        const env = process.env.NODE_ENV;
+        const baseUrl =
+          env === "development"
+            ? "http://127.0.0.1:9000" // "http://54.238.1.161:9000"
+            : process.env.NEXT_PUBLIC_NGROK_URL;
+        const response = await fetch(
+          `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
+            chatHistory
+          )}`
+        );
 
-      // 檢查響應狀態
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      // 檢查 response.body 是否為空
-      if (!response.body) {
-        throw new Error("Response body is null");
-      }
-      setIsStreaming(true);
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      setLoading(false);
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+        // 檢查響應狀態
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // 檢查 response.body 是否為空
+        if (!response.body) {
+          throw new Error("Response body is null");
+        }
+        setIsStreaming(true);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        setLoading(false);
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
 
-        // 將新的chunk添加到buffer中
-        buffer += decoder.decode(value, { stream: true });
+          // 將新的chunk添加到buffer中
+          buffer += decoder.decode(value, { stream: true });
 
-        // 嘗試按行分割並解析
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // 保存最後一個不完整的行
+          // 嘗試按行分割並解析
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // 保存最後一個不完整的行
 
-        // 處理每一行數據
-        for (const line of lines) {
-          if (line.trim()) {
-            // 忽略空行
-            try {
-              const parsedData = JSON.parse(line);
-              if (parsedData.content) {
-                setCurrentChat((prev) => {
-                  const lastMessage = prev[prev.length - 1];
+          // 處理每一行數據
+          for (const line of lines) {
+            if (line.trim()) {
+              // 忽略空行
+              try {
+                const parsedData = JSON.parse(line);
+                if (parsedData.content) {
+                  setCurrentChat((prev) => {
+                    const lastMessage = prev[prev.length - 1];
 
-                  // 如果最後一條消息是AI的回應，則更新其內容
-                  if (lastMessage && lastMessage.role === "ai") {
-                    const updatedChat = [...prev];
-                    updatedChat[updatedChat.length - 1] = {
-                      role: "ai",
-                      content: lastMessage.content + parsedData.content,
-                    };
-                    return updatedChat;
-                  }
+                    // 如果最後一條消息是AI的回應，則更新其內容
+                    if (lastMessage && lastMessage.role === "ai") {
+                      const updatedChat = [...prev];
+                      updatedChat[updatedChat.length - 1] = {
+                        role: "ai",
+                        content: lastMessage.content + parsedData.content,
+                      };
+                      return updatedChat;
+                    }
 
-                  return [
-                    ...prev,
-                    {
-                      role: "ai",
-                      content: parsedData.content,
-                    },
-                  ];
-                });
+                    return [
+                      ...prev,
+                      {
+                        role: "ai",
+                        content: parsedData.content,
+                      },
+                    ];
+                  });
+                }
+              } catch (e) {
+                console.warn("Failed to parse line:", e);
               }
-            } catch (e) {
-              console.warn("Failed to parse line:", e);
             }
           }
         }
-      }
 
-      // 處理最後剩餘的buffer
-      if (buffer.trim()) {
-        try {
-          const parsedData = JSON.parse(buffer);
-          if (parsedData.content) {
-            setCurrentChat((prev) => {
-              const lastMessage = prev[prev.length - 1];
+        // 處理最後剩餘的buffer
+        if (buffer.trim()) {
+          try {
+            const parsedData = JSON.parse(buffer);
+            if (parsedData.content) {
+              setCurrentChat((prev) => {
+                const lastMessage = prev[prev.length - 1];
 
-              // 如果最後一條消息是AI的回應，則更新其內容
-              if (lastMessage && lastMessage.role === "ai") {
-                const updatedChat = [...prev];
-                updatedChat[updatedChat.length - 1] = {
-                  role: "ai",
-                  content: lastMessage.content + parsedData.content,
-                };
-                return updatedChat;
-              }
+                // 如果最後一條消息是AI的回應，則更新其內容
+                if (lastMessage && lastMessage.role === "ai") {
+                  const updatedChat = [...prev];
+                  updatedChat[updatedChat.length - 1] = {
+                    role: "ai",
+                    content: lastMessage.content + parsedData.content,
+                  };
+                  return updatedChat;
+                }
 
-              return [
-                ...prev,
-                {
-                  role: "ai",
-                  content: parsedData.content,
-                },
-              ];
-            });
-          }
-        } catch (e: unknown) {
-          if (e instanceof Error) {
-            console.warn("Failed to parse final buffer:", e.message);
-          } else {
-            console.warn("Failed to parse final buffer:", e);
+                return [
+                  ...prev,
+                  {
+                    role: "ai",
+                    content: parsedData.content,
+                  },
+                ];
+              });
+            }
+          } catch (e: unknown) {
+            if (e instanceof Error) {
+              console.warn("Failed to parse final buffer:", e.message);
+            } else {
+              console.warn("Failed to parse final buffer:", e);
+            }
           }
         }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error("Stream error:", error.message);
+        } else {
+          console.error("Unknown error:", error);
+        }
+      } finally {
+        setIsStreaming(false);
       }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Stream error:", error.message);
-      } else {
-        console.error("Unknown error:", error);
-      }
-    } finally {
-      setIsStreaming(false);
-    }
-  }, []);
+    },
+    []
+  );
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isSubmitting) {
       setIsSubmitting(true);
       try {
-        await handleStream(inputValue);
+        await handleStream(inputValue, currentChat);
       } catch (error) {
         console.error("Submit error:", error);
       } finally {
@@ -191,7 +208,6 @@ export default function Home() {
   const handleCompositionEnd = () => {
     setIsComposing(false);
   };
-
   return (
     <div
       className="flex flex-col items-center justify-center w-full"
@@ -207,7 +223,6 @@ export default function Home() {
               <ChatComponent
                 loading={loading}
                 chatLog={currentChat}
-                currentChat={currentChat}
                 prompts={prompts}
                 handleQuery={handleStream}
                 basicPrompt={basicPrompt}

@@ -7,16 +7,14 @@ import ReactMarkdown from "react-markdown";
 
 export default function ChatComponent({
   chatLog,
-  currentChat,
   prompts,
   handleQuery,
   loading,
   basicPrompt,
 }: {
   chatLog: UserHistory[];
-  currentChat?: UserHistory[];
   prompts?: string[];
-  handleQuery: (input: string) => void;
+  handleQuery: (input: string, chatHistory: UserHistory[]) => void;
   loading: boolean;
   basicPrompt: string[];
 }) {
@@ -28,7 +26,7 @@ export default function ChatComponent({
         behavior: "smooth",
       });
     }
-  }, [chatLog, currentChat, prompts]);
+  }, [chatLog, prompts]);
   return (
     <div
       ref={chatContainerRef}
@@ -41,7 +39,7 @@ export default function ChatComponent({
             <div
               key={index}
               className="rounded-lg w-full h-fit border border-amber-700 p-2 hover:bg-amber-700 hover:text-white transition-colors duration-300 cursor-pointer"
-              onClick={() => handleQuery(prompt)}
+              onClick={() => handleQuery(prompt, chatLog)}
             >
               {prompt}
             </div>
@@ -71,30 +69,6 @@ export default function ChatComponent({
           </ReactMarkdown>
         </div>
       ))}
-      {currentChat &&
-        currentChat.map((message: UserHistory, index: number) => (
-          <div
-            key={index}
-            className={`flex ${
-              message.role === "human" ? "justify-end" : "justify-start"
-            }`}
-          >
-            {message.role === "ai" && (
-              <div className="flex rounded-full border border-amber-700 size-fit p-2 gap-2 mr-4">
-                <IoLibrary className="w-3 h-3 text-amber-700" />
-              </div>
-            )}
-            <ReactMarkdown
-              className={`${
-                message.role === "human"
-                  ? "bg-gray-800 text-[#FFECD3] p-4"
-                  : "text-[#1E1E1E]"
-              } rounded-[20px] max-w-2xl`}
-            >
-              {message.content}
-            </ReactMarkdown>
-          </div>
-        ))}
       {loading && (
         <div className="flex justify-start w-full">
           <iframe src="https://lottie.host/embed/1761150a-2d15-43c9-aa56-0bb9c9add5d7/mcQjQQ2npP.json"></iframe>
@@ -107,7 +81,7 @@ export default function ChatComponent({
             <div
               key={index}
               className="rounded-lg w-full h-fit border border-amber-700 p-2 hover:bg-amber-700 hover:text-white transition-colors duration-300 cursor-pointer"
-              onClick={() => handleQuery(prompt)}
+              onClick={() => handleQuery(prompt, chatLog)}
             >
               {prompt}
             </div>
