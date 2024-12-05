@@ -5,6 +5,11 @@ export interface UserHistory {
   role: string;
   content: string;
 }
+export interface SummaryResponse {
+  summary: string;
+  links: string[];
+  keywords: string[];
+}
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
@@ -14,6 +19,11 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [summary, setSummary] = useState<SummaryResponse>({
+    summary: "",
+    links: [],
+    keywords: [],
+  });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -31,15 +41,44 @@ export default function Home() {
   ];
   useEffect(() => {
     if (currentChat.length >= 6 && !isStreaming) {
-      console.log("currentChat", currentChat);
+      handleSummary(currentChat);
     }
   }, [currentChat, isStreaming]);
   // const handleClearChat = () => {
   //   setCurrentChat([]);
   // };
-  // const handleSummary = useCallback(async () => {
-  //   console.log("summary");
-  // }, []);
+  const handleSummary = useCallback(async (chatHistory: UserHistory[]) => {
+    setLoading(true);
+    try {
+      setPrompts([]);
+      const env = process.env.NODE_ENV;
+      const baseUrl =
+        env === "development"
+          ? "http://127.0.0.1:9000"
+          : process.env.NEXT_PUBLIC_NGROK_URL;
+      const response = await fetch(
+        `${baseUrl}/summary_query?chat_history=${JSON.stringify(chatHistory)}`
+      );
+
+      // 檢查響應狀態
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // 檢查 response.body 是否為空
+      if (!response.body) {
+        throw new Error("Response body is null");
+      }
+      setSummary(await response.json());
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Stream error:", error.message);
+      } else {
+        console.error("Unknown error:", error);
+      }
+    } finally {
+      setIsStreaming(false);
+    }
+  }, []);
   const handleStream = useCallback(
     async (message: string, chatHistory: UserHistory[]) => {
       setLoading(true);
@@ -231,6 +270,13 @@ export default function Home() {
           ) : (
             <div className="flex-1 overflow-y-auto mb-4">
               <p>請輸入訊息...</p>
+            </div>
+          )}
+          {summary.summary && (
+            <div className="flex-1 overflow-y-auto mb-4">
+              <p>總結：{summary.summary}</p>
+              <p>相關連結：{summary.links.join(", ")}</p>
+              <p>關鍵字：{summary.keywords.join(", ")}</p>
             </div>
           )}
           <form
