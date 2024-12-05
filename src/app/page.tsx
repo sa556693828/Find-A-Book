@@ -1,6 +1,10 @@
 "use client";
 import ChatComponent from "@/components/Chat";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { LuSparkles } from "react-icons/lu";
+import { IoSearchSharp } from "react-icons/io5";
+import SearchResultsSection from "@/components/SearchResult";
+
 export interface UserHistory {
   role: string;
   content: string;
@@ -9,6 +13,11 @@ export interface BooksLinks {
   title: string;
   link: string;
   image: string;
+}
+export interface AiBooksLinks {
+  title: string;
+  link: string;
+  content: string;
 }
 
 export default function Home() {
@@ -22,6 +31,7 @@ export default function Home() {
   const [summary, setSummary] = useState("");
   const [keywords, setKeywords] = useState([]);
   const [booksLinks, setBooksLinks] = useState<BooksLinks[]>([]);
+  const [aiBooksLinks, setAiBooksLinks] = useState<AiBooksLinks[]>([]);
   const [isSummary, setIsSummary] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const adjustHeight = () => {
@@ -96,6 +106,7 @@ export default function Home() {
               if (parsedData.summary) setSummary(parsedData.summary);
               if (parsedData.keywords) setKeywords(parsedData.keywords);
               if (parsedData.books) setBooksLinks(parsedData.books);
+              if (parsedData.books_ai) setAiBooksLinks(parsedData.books_ai);
             } catch (e) {
               console.warn("Failed to parse line:", e);
             }
@@ -109,6 +120,7 @@ export default function Home() {
             if (parsedData.summary) setSummary(parsedData.summary);
             if (parsedData.keywords) setKeywords(parsedData.keywords);
             if (parsedData.books) setBooksLinks(parsedData.books);
+            if (parsedData.books_ai) setAiBooksLinks(parsedData.books_ai);
           } catch (e) {
             console.warn("Failed to parse final buffer:", e);
           }
@@ -256,6 +268,7 @@ export default function Home() {
   );
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setInputValue("");
     if (!isSubmitting) {
       setIsSubmitting(true);
       try {
@@ -303,7 +316,7 @@ export default function Home() {
       }}
     >
       <div className="text-black flex-1 w-full">
-        <div className="p-4 h-[30vh] relative flex flex-col border-b border-black/20">
+        <div className="p-4 h-[30vh] relative w-[90%] mx-auto backdrop-blur-sm shadow-md my-8 flex flex-col border border-black/20">
           {/* 聊天訊息區域 */}
           {currentChat.length > 0 ? (
             <div className="flex-1 overflow-y-auto mb-4">
@@ -317,7 +330,9 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto mb-4">
-              <p>請輸入訊息...</p>
+              <h2 className="text-lg font-semibold text-pink/50 mb-2 flex items-center">
+                跟讀冊管家聊聊吧...
+              </h2>
             </div>
           )}
 
@@ -368,44 +383,48 @@ export default function Home() {
           </form>
         </div>
         <div className="flex flex-col gap-2">
-          {summary && (
-            <div className="">
-              <p className="text-xl font-semibold">讀冊管家分析：{summary}</p>
-            </div>
-          )}
-          {keywords.length > 0 && (
-            <div className="">
-              <p className="text-lg font-medium">
-                關鍵字：{keywords.join(", ")}
+          <div className="px-4">
+            <h2 className="text-lg font-semibold text-pink mb-2 flex items-center">
+              <LuSparkles className="w-5 h-5 mr-2" />
+              讀冊管家分析：
+            </h2>
+            {summary && (
+              <p className="text-lg text-black/80 font-semibold pl-4">
+                {summary}
               </p>
-            </div>
-          )}
-          {summary && keywords.length && booksLinks.length === 0 ? (
-            <p className="text-lg font-medium">正在搜索相關書籍...</p>
-          ) : (
-            <div className="flex-1 overflow-y-auto mb-4">
-              <p>相關連結：</p>
-              <ul>
-                {booksLinks.map((book: BooksLinks) => (
-                  <li key={book.link} className="mb-2">
-                    <a
-                      href={book.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center border border-black/20 rounded-md"
+            )}
+            <div className="pt-2 flex items-center">
+              <h2 className="text-lg font-semibold text-pink flex items-center">
+                關鍵字：
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {keywords.length > 0 &&
+                  keywords.map((keyword, index) => (
+                    <p
+                      key={index}
+                      className="text-lg text-black/80 bg-orange-100 text-orange-700 px-2 py-1 rounded-md hover:bg-orange-200"
                     >
-                      <img
-                        src={book.image}
-                        alt={book.title}
-                        className="w-12 h-16 mr-2"
-                      />
-                      <span className="text-blue-800">{book.title}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+                      {keyword}
+                    </p>
+                  ))}
+              </div>
             </div>
-          )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 p-4">
+            <SearchResultsSection
+              isStreaming={isStreaming}
+              title="一般搜索"
+              icon={<IoSearchSharp className="w-5 h-5 mr-2 text-purple-400" />}
+              results={booksLinks.length > 0 ? booksLinks : []}
+            />
+            <SearchResultsSection
+              isStreaming={isStreaming}
+              title="AI搜索"
+              icon={<IoSearchSharp className="w-5 h-5 mr-2 text-green-400" />}
+              results={aiBooksLinks.length > 0 ? aiBooksLinks : []}
+            />
+          </div>
         </div>
       </div>
     </div>
