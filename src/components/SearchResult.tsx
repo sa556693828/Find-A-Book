@@ -45,7 +45,7 @@ function SearchResultsSection({
                         />
                       ) : (
                         <img
-                          src="/public/taaze_default.jpeg"
+                          src="/taaze_default.jpeg"
                           alt="taaze"
                           className="object-cover w-full h-full"
                         />
