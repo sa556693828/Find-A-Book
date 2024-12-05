@@ -7,7 +7,7 @@ export interface UserHistory {
 }
 export interface BooksLinks {
   title: string;
-  links: string;
+  link: string;
   image: string;
 }
 
@@ -303,7 +303,7 @@ export default function Home() {
       }}
     >
       <div className="text-black flex-1 w-full">
-        <div className="p-4 h-[calc(100vh-70px)] relative flex flex-col border-b border-black/20">
+        <div className="p-4 h-[30vh] relative flex flex-col border-b border-black/20">
           {/* 聊天訊息區域 */}
           {currentChat.length > 0 ? (
             <div className="flex-1 overflow-y-auto mb-4">
@@ -320,21 +320,7 @@ export default function Home() {
               <p>請輸入訊息...</p>
             </div>
           )}
-          {summary && (
-            <div className="flex-1 overflow-y-auto mb-4">
-              <p>總結：{summary}</p>
-            </div>
-          )}
-          {keywords.length > 0 && (
-            <div className="flex-1 overflow-y-auto mb-4">
-              <p>關鍵字：{keywords.join(", ")}</p>
-            </div>
-          )}
-          {booksLinks.length > 0 && (
-            <div className="flex-1 overflow-y-auto mb-4">
-              <p>相關連結：{booksLinks.map((book) => book.links).join(", ")}</p>
-            </div>
-          )}
+
           <form
             onSubmit={handleSubmit}
             className="flex gap-2 absolute bottom-4 w-1/2 left-1/2 -translate-x-1/2"
@@ -380,6 +366,46 @@ export default function Home() {
               </button>
             </div>
           </form>
+        </div>
+        <div className="flex flex-col gap-2">
+          {summary && (
+            <div className="">
+              <p className="text-xl font-semibold">讀冊管家分析：{summary}</p>
+            </div>
+          )}
+          {keywords.length > 0 && (
+            <div className="">
+              <p className="text-lg font-medium">
+                關鍵字：{keywords.join(", ")}
+              </p>
+            </div>
+          )}
+          {summary && keywords.length && booksLinks.length === 0 ? (
+            <p className="text-lg font-medium">正在搜索相關書籍...</p>
+          ) : (
+            <div className="flex-1 overflow-y-auto mb-4">
+              <p>相關連結：</p>
+              <ul>
+                {booksLinks.map((book: BooksLinks) => (
+                  <li key={book.link} className="mb-2">
+                    <a
+                      href={book.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center border border-black/20 rounded-md"
+                    >
+                      <img
+                        src={book.image}
+                        alt={book.title}
+                        className="w-12 h-16 mr-2"
+                      />
+                      <span className="text-blue-800">{book.title}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
