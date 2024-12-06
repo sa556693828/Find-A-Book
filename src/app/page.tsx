@@ -20,6 +20,7 @@ export interface AiBooksLinks {
   content: string;
 }
 
+// TODO: 持續對話會持續改變結果
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<UserHistory[]>([]);
@@ -33,6 +34,7 @@ export default function Home() {
   const [booksLinks, setBooksLinks] = useState<BooksLinks[]>([]);
   const [aiBooksLinks, setAiBooksLinks] = useState<AiBooksLinks[]>([]);
   const [isSummary, setIsSummary] = useState(false);
+  const [retriggerSummary, setRetriggerSummary] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -49,7 +51,7 @@ export default function Home() {
     "我是一個上班族，我該用什麼角度去理解書中的內容",
   ];
   useEffect(() => {
-    if (currentChat.length >= 6 && !isStreaming && !isSummary) {
+    if (currentChat.length >= 6 && !isStreaming) {
       handleSummary(currentChat);
     }
   }, [currentChat, isStreaming, isSummary]);
@@ -414,13 +416,15 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-2 p-4">
             <SearchResultsSection
               isStreaming={isStreaming}
-              title="一般搜索"
+              isSummary={isSummary}
+              title="AI搜索 model1"
               icon={<IoSearchSharp className="w-5 h-5 mr-2 text-purple-400" />}
               results={booksLinks.length > 0 ? booksLinks : []}
             />
             <SearchResultsSection
               isStreaming={isStreaming}
-              title="AI搜索"
+              isSummary={isSummary}
+              title="AI搜索 model2"
               icon={<IoSearchSharp className="w-5 h-5 mr-2 text-green-400" />}
               results={aiBooksLinks.length > 0 ? aiBooksLinks : []}
             />

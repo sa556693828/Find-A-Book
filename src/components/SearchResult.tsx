@@ -2,13 +2,16 @@ import { AiBooksLinks, BooksLinks } from "@/app/page";
 import { IoMdArrowDropright } from "react-icons/io";
 import { FiBookOpen } from "react-icons/fi";
 
+// TODO: 有call summary的時候，才顯示正在生成結果
 function SearchResultsSection({
   isStreaming,
+  isSummary,
   title,
   icon,
   results,
 }: {
   isStreaming: boolean;
+  isSummary: boolean;
   title: string;
   icon: React.ReactNode;
   results: BooksLinks[] | AiBooksLinks[];
