@@ -30,11 +30,11 @@ export default function Home() {
   const [isComposing, setIsComposing] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [summary, setSummary] = useState("");
-  const [keywords, setKeywords] = useState([]);
+  const [, setKeywords] = useState([]);
   const [booksLinks, setBooksLinks] = useState<BooksLinks[]>([]);
   const [aiBooksLinks, setAiBooksLinks] = useState<AiBooksLinks[]>([]);
   const [isSummary, setIsSummary] = useState(false);
-  const [retriggerSummary, setRetriggerSummary] = useState(false);
+  // const [retriggerSummary, setRetriggerSummary] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -333,7 +333,7 @@ export default function Home() {
           ) : (
             <div className="flex-1 overflow-y-auto mb-4">
               <h2 className="text-lg font-semibold text-pink/50 mb-2 flex items-center">
-                跟讀冊管家聊聊吧...
+                跟讀冊智能體聊聊吧...
               </h2>
             </div>
           )}
@@ -388,14 +388,14 @@ export default function Home() {
           <div className="px-4">
             <h2 className="text-lg font-semibold text-pink mb-2 flex items-center">
               <LuSparkles className="w-5 h-5 mr-2" />
-              讀冊管家分析：
+              讀冊智能體選書 Reasoning：
             </h2>
             {summary && (
               <p className="text-lg text-black/80 font-semibold pl-4">
                 {summary}
               </p>
             )}
-            <div className="pt-2 flex items-center">
+            {/* <div className="pt-2 flex items-center">
               <h2 className="text-lg font-semibold text-pink flex items-center">
                 關鍵字：
               </h2>
@@ -410,21 +410,21 @@ export default function Home() {
                     </p>
                   ))}
               </div>
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-2 gap-2 p-4">
             <SearchResultsSection
               isStreaming={isStreaming}
               isSummary={isSummary}
-              title="AI搜索 model1"
+              title="AI搜索 生成式模型 Lisa"
               icon={<IoSearchSharp className="w-5 h-5 mr-2 text-purple-400" />}
               results={booksLinks.length > 0 ? booksLinks : []}
             />
             <SearchResultsSection
               isStreaming={isStreaming}
               isSummary={isSummary}
-              title="AI搜索 model2"
+              title="AI搜索 生成式模型 ROSÉ"
               icon={<IoSearchSharp className="w-5 h-5 mr-2 text-green-400" />}
               results={aiBooksLinks.length > 0 ? aiBooksLinks : []}
             />
