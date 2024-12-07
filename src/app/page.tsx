@@ -182,11 +182,21 @@ export default function Home() {
         ]);
         setPrompts([]);
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
-        const response = await fetch(
-          `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
-            chatHistory
-          )}`
-        );
+        const response = await fetch(`${baseUrl}/query_search_chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: message,
+            chat_history: chatHistory,
+          }),
+        });
+        // const response = await fetch(
+        //   `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
+        //     chatHistory
+        //   )}`
+        // );
 
         // 檢查響應狀態
         if (!response.ok) {
