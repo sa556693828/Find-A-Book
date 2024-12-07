@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LuSparkles } from "react-icons/lu";
 import { IoSearchSharp } from "react-icons/io5";
 import SearchResultsSection from "@/components/SearchResult";
+import { TbTrash } from "react-icons/tb";
 
 export interface UserHistory {
   role: string;
@@ -44,6 +45,10 @@ export default function Home() {
       textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
     }
   };
+  const clearChat = () => {
+    setCurrentChat([]);
+    localStorage.removeItem("chatHistory");
+  };
   const basicPrompt = [
     "幫我總結這本書的內容",
     "告訴我為什麼要讀這本書",
@@ -52,16 +57,23 @@ export default function Home() {
     "我是一個上班族，我該用什麼角度去理解書中的內容",
   ];
   useEffect(() => {
+    if (currentChat.length > 0) {
+      localStorage.setItem("chatHistory", JSON.stringify(currentChat));
+    }
+  }, [currentChat]);
+  useEffect(() => {
+    const saved = localStorage.getItem("chatHistory");
+    if (saved) {
+      setCurrentChat(JSON.parse(saved));
+    }
+  }, []);
+  useEffect(() => {
     if (!isStreaming) {
       if (currentChat.length >= 6 && chatHistoryNum !== currentChat.length) {
         handleSummary(currentChat);
       }
     }
   }, [currentChat, isStreaming, chatHistoryNum]);
-  // const handleClearChat = () => {
-  //   setCurrentChat([]);
-  // }; recommandation 先試、DocAgent推版、spec 推版、大語言訓練小語言、代碼規範、產品化要注意什麼
-
   const handleSummary = useCallback(async (chatHistory: UserHistory[]) => {
     setLoading(true);
     try {
@@ -70,11 +82,7 @@ export default function Home() {
       setKeywords([]);
       setBooksLinks([]);
       setAiBooksLinks([]);
-      const env = process.env.NODE_ENV;
-      const baseUrl =
-        env === "development"
-          ? "http://127.0.0.1:9000"
-          : process.env.NEXT_PUBLIC_NGROK_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
       const response = await fetch(
         `${baseUrl}/summary_query?chat_history=${JSON.stringify(chatHistory)}`
       );
@@ -157,11 +165,7 @@ export default function Home() {
           { role: "human", content: message },
         ]);
         setPrompts([]);
-        const env = process.env.NODE_ENV;
-        const baseUrl =
-          env === "development"
-            ? "http://127.0.0.1:9000"
-            : process.env.NEXT_PUBLIC_NGROK_URL;
+        const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
         const response = await fetch(
           `${baseUrl}/query_search_chat?message=${message}&chat_history=${JSON.stringify(
             chatHistory
@@ -323,6 +327,10 @@ export default function Home() {
       }}
     >
       <div className="p-4 h-[92vh] border-r rounded-lg relative ml-2 w-1/2 mx-auto backdrop-blur-sm shadow-md flex flex-col border border-black/20">
+        <TbTrash
+          className="absolute top-2 right-2 cursor-pointer hover:text-pink"
+          onClick={clearChat}
+        />
         {/* 聊天訊息區域 */}
         {currentChat.length > 0 ? (
           <div className="flex-1 overflow-y-auto mb-4">
@@ -341,7 +349,6 @@ export default function Home() {
             </h2>
           </div>
         )}
-
         <form
           onSubmit={handleSubmit}
           className="flex gap-2 absolute bottom-4 w-4/5 left-1/2 -translate-x-1/2"

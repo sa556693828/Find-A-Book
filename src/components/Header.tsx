@@ -12,33 +12,33 @@ export default function Header() {
 
       {/* 中間導航菜單 */}
       <nav className="flex items-center gap-8">
-        <Link href="/classroom" className="text-gray-700 hover:text-pink">
+        <Link href="/" className="text-gray-700 hover:text-pink">
           學堂
         </Link>
-        <Link href="/books" className="text-gray-700 hover:text-pink">
+        <Link href="/" className="text-gray-700 hover:text-pink">
           冊格子
         </Link>
-        <Link href="/secondhand" className="text-gray-700 hover:text-pink">
+        <Link href="/" className="text-gray-700 hover:text-pink">
           二手書送你
         </Link>
       </nav>
 
       {/* 右側用戶操作區 */}
       <div className="flex items-center gap-4">
-        <Link href="/login" className="text-gray-700 hover:text-pink">
+        <Link href="/" className="text-gray-700 hover:text-pink">
           登入
         </Link>
         <Link
-          href="/register"
+          href="/"
           className="px-4 py-1 rounded-full bg-pink-500 text-pink hover:bg-pink-600"
         >
           註冊
         </Link>
-        <Link href="/member" className="text-gray-700 hover:text-pink">
+        <Link href="/" className="text-gray-700 hover:text-pink">
           會員中心
         </Link>
         <Link
-          href="/cart"
+          href="/"
           className="flex items-center gap-1 text-gray-700 hover:text-pink"
         >
           <svg
@@ -55,7 +55,7 @@ export default function Header() {
               d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
             />
           </svg>
-          <span>1</span>
+          <span>購物車</span>
         </Link>
       </div>
     </header>
