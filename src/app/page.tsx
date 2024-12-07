@@ -21,10 +21,9 @@ export interface AiBooksLinks {
   content: string;
 }
 
-// TODO: 持續對話會持續改變結果
 export default function Home() {
-  // const proMessage =
-  //   "Please upgrade to Tazze pro for unlimited Agent experience";
+  const proMessage = "請升級到 Tazze 專業版以獲得無限的智能體體驗";
+
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<UserHistory[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -86,7 +85,7 @@ export default function Home() {
     try {
       setPrompts([]);
       setBooksLinks([]);
-      setAiBooksLinks([]);
+      // setAiBooksLinks([]);
       const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
       const response = await fetch(`${baseUrl}/summary_query`, {
         method: "POST",
@@ -360,7 +359,7 @@ export default function Home() {
         )}
         <form
           onSubmit={handleSubmit}
-          className="flex gap-2 absolute bottom-4 w-4/5 left-1/2 -translate-x-1/2"
+          className="flex gap-2 absolute bottom-4 w-4/5 left-1/2 -translate-x-1/2 "
         >
           <div className="flex items-start w-full bg-[#202123] rounded-xl shadow-sm border border-gray-800/50">
             <textarea
@@ -371,11 +370,16 @@ export default function Home() {
                 setInputValue(e.target.value);
                 adjustHeight();
               }}
+              disabled={currentChat.length >= 10}
               onCompositionStart={handleCompositionStart}
               onCompositionEnd={handleCompositionEnd}
               onKeyDown={handleKeyDown}
-              placeholder="輸入訊息... (Enter 發送, Shift + Enter 換行)"
-              className="flex-1 bg-transparent px-4 py-3 text-white placeholder-gray-400 focus:outline-none resize-none min-h-[48px] max-h-[200px] overflow-y-auto"
+              placeholder={
+                currentChat.length >= 10
+                  ? proMessage
+                  : "輸入訊息... (Enter 發送, Shift + Enter 換行)"
+              }
+              className="flex-1 bg-transparent px-4 py-3 text-white disabled:text-gray-400 placeholder-gray-400 focus:outline-none resize-none min-h-[48px] max-h-[200px] overflow-y-auto"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#4B5563 transparent",
@@ -383,14 +387,13 @@ export default function Home() {
             />
             <button
               type="submit"
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || currentChat.length >= 10}
               className={`px-4 py-3 transition-colors self-end
               ${
                 inputValue.trim()
                   ? "text-white hover:text-gray-300 cursor-pointer"
                   : "text-gray-600 cursor-not-allowed"
               }`}
-              title={!inputValue.trim() ? "請輸入訊息" : "發送訊息"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
