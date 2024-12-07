@@ -85,7 +85,7 @@ export default function Home() {
     try {
       setPrompts([]);
       setBooksLinks([]);
-      // setAiBooksLinks([]);
+      setAiBooksLinks([]);
       const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
       const response = await fetch(`${baseUrl}/summary_query`, {
         method: "POST",
@@ -132,7 +132,11 @@ export default function Home() {
               if (parsedData.summary) setSummary(parsedData.summary);
               if (parsedData.keywords) setKeywords(parsedData.keywords);
               if (parsedData.books) setBooksLinks(parsedData.books);
-              if (parsedData.books_ai) setAiBooksLinks(parsedData.books_ai);
+              if (parsedData.books_ai) {
+                setAiBooksLinks((prev) => {
+                  return [...prev, ...parsedData.books_ai];
+                });
+              }
             } catch (e) {
               console.warn("Failed to parse line:", e);
             }
@@ -144,7 +148,11 @@ export default function Home() {
             if (parsedData.summary) setSummary(parsedData.summary);
             if (parsedData.keywords) setKeywords(parsedData.keywords);
             if (parsedData.books) setBooksLinks(parsedData.books);
-            if (parsedData.books_ai) setAiBooksLinks(parsedData.books_ai);
+            if (parsedData.books_ai) {
+              setAiBooksLinks((prev) => {
+                return [...prev, parsedData.books_ai];
+              });
+            }
           } catch (e) {
             console.warn("Failed to parse final buffer:", e);
           }
@@ -414,13 +422,7 @@ export default function Home() {
               <LuSparkles className="w-8 h-8 mr-4" />
               ツンツンツンデレ ちゃん 智能體
             </h2>
-            {/* <p className="text-sm text-black/80">智能體</p> */}
           </div>
-          {/* {summary && (
-            <p className="text-lg text-black/80 font-semibold pl-4">
-              {summary}summarysummarysummarysummarysummarysummarysummary
-            </p>
-          )} */}
 
           <p className="text-lg font-semibold pl-[50px]">
             這是一個超硬核的對話AI，直球猛打、毫不手軟，專挑戰你的思維邊界，熱愛掀起腦洞風暴。但一聊到內心深處，瞬間切換貼心模式，讓你感受到滿滿反差魅力。刺激又暖心的對話體驗，絕對讓你過目不忘！
