@@ -15,6 +15,9 @@ function SearchResultsSection({
   icon: React.ReactNode;
   results: BooksLinks[] | AiBooksLinks[];
 }) {
+  const isAI = title.includes("ROSÉ");
+  const roseModelWaitingMessage = "讓我思考10秒鐘，為你找到最好的書籍。";
+
   return (
     <div className="p-4 rounded-lg h-full border border-gray-300 bg-opacity-50">
       <h3 className="text-xl font-semibold mb-3 flex items-center border-b-2 pb-2 border-gray-300">
@@ -23,12 +26,11 @@ function SearchResultsSection({
       </h3>
       <div className="h-[55vh] overflow-y-auto">
         <ul className="space-y-4">
-          {/* <div className="flex items-center justify-center h-24">
-            <p className="text-gray-500">正在生成结果...</p>
-          </div> */}
           {isLoading && results.length === 0 ? (
             <div className="flex items-center justify-center h-24">
-              <p className="text-gray-500">正在生成结果...</p>
+              <p className="text-gray-500">
+                {isAI ? roseModelWaitingMessage : "正在生成结果..."}
+              </p>
             </div>
           ) : (
             results?.map((book: BooksLinks | AiBooksLinks, index: number) => (
@@ -42,18 +44,18 @@ function SearchResultsSection({
                 >
                   <div className="p-4">
                     <div className="flex items-start gap-4">
-                      <div className="relative  overflow-hidden rounded-md shadow-md group-hover:shadow-lg transition-shadow">
+                      <div className="relative overflow-hidden rounded-md shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
                         {"image" in book ? (
                           <img
                             src={book.image}
                             alt={book.title}
-                            className="object-cover w-full h-[120px]"
+                            className="object-cover max-w-[100px] h-[120px]"
                           />
                         ) : (
                           <img
                             src="/taaze_default.jpeg"
                             alt="taaze"
-                            className="object-contain w-full h-[40px]"
+                            className="object-contain w-[40px] h-[40px]"
                           />
                         )}
                       </div>
@@ -71,8 +73,14 @@ function SearchResultsSection({
                             {/* {book.category} */}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {"content" in book ? <p>{book.content}</p> : <></>}
+                        <div className="flex items-center flex-wrap gap-2">
+                          {"content" in book ? (
+                            <p className="line-clamp-6 overflow-x-hidden">
+                              {book.content}
+                            </p>
+                          ) : (
+                            <></>
+                          )}
                         </div>
                       </div>
                     </div>

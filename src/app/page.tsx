@@ -23,6 +23,8 @@ export interface AiBooksLinks {
 
 // TODO: 持續對話會持續改變結果
 export default function Home() {
+  // const proMessage =
+  //   "Please upgrade to Tazze pro for unlimited Agent experience";
   const [loading, setLoading] = useState(false);
   const [currentChat, setCurrentChat] = useState<UserHistory[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -47,6 +49,11 @@ export default function Home() {
   };
   const clearChat = () => {
     setCurrentChat([]);
+    setSummary("");
+    setKeywords([]);
+    setBooksLinks([]);
+    setAiBooksLinks([]);
+
     localStorage.removeItem("chatHistory");
   };
   const basicPrompt = [
@@ -78,14 +85,16 @@ export default function Home() {
     setLoading(true);
     try {
       setPrompts([]);
-      setSummary("");
-      setKeywords([]);
       setBooksLinks([]);
       setAiBooksLinks([]);
       const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
-      const response = await fetch(
-        `${baseUrl}/summary_query?chat_history=${JSON.stringify(chatHistory)}`
-      );
+      const response = await fetch(`${baseUrl}/summary_query`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ chat_history: chatHistory }),
+      });
 
       // 檢查響應狀態
       if (!response.ok) {
@@ -95,12 +104,12 @@ export default function Home() {
       if (!response.body) {
         throw new Error("Response body is null");
       }
-      setIsStreaming(true);
       setChatHistoryNum(chatHistory.length);
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       setLoading(false);
+      setIsStreaming(true);
       try {
         while (true) {
           const { value, done } = await reader.read();
@@ -180,12 +189,12 @@ export default function Home() {
         if (!response.body) {
           throw new Error("Response body is null");
         }
-        setIsStreaming(true);
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
         setLoading(false);
         while (true) {
+          setIsStreaming(true);
           const { value, done } = await reader.read();
           if (done) break;
 
@@ -328,7 +337,7 @@ export default function Home() {
     >
       <div className="p-4 h-[92vh] border-r rounded-lg relative ml-2 w-1/2 mx-auto backdrop-blur-sm shadow-md flex flex-col border border-black/20">
         <TbTrash
-          className="absolute top-2 right-2 cursor-pointer hover:text-pink"
+          className="absolute top-2 left-2 cursor-pointer hover:text-pink"
           onClick={clearChat}
         />
         {/* 聊天訊息區域 */}
@@ -344,7 +353,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto mb-4">
-            <h2 className="text-lg font-semibold text-pink/50 mb-2 flex items-center">
+            <h2 className="text-lg font-semibold text-pink/50 my-2 flex items-center">
               跟 ツンデレツンツンツンデレ ちゃん 智能體聊聊吧...
             </h2>
           </div>
@@ -417,22 +426,6 @@ export default function Home() {
             對你的直覺：
             {summary ? summary : ""}
           </p>
-          {/* <div className="pt-2 flex items-center">
-              <h2 className="text-lg font-semibold text-pink flex items-center">
-                關鍵字：
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {keywords.length > 0 &&
-                  keywords.map((keyword, index) => (
-                    <p
-                      key={index}
-                      className="text-lg text-black/80 bg-orange-100 text-orange-700 px-2 py-1 rounded-md hover:bg-orange-200"
-                    >
-                      {keyword}
-                    </p>
-                  ))}
-              </div>
-            </div> */}
         </div>
 
         <div className="grid grid-cols-2 gap-2 flex-1">
