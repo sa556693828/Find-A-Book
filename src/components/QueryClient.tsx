@@ -19,7 +19,7 @@ const QueryClient = () => {
   const [currentChat, setCurrentChat] = useState<Message[]>([]);
 
   const handleSummary = useCallback(
-    async (userId: string, personaId: string, currentChat: Message[]) => {
+    async (userId: string, personaId: string) => {
       setSummaryLoading(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
@@ -562,7 +562,7 @@ const QueryClient = () => {
         chatHistoryNum !==
           currentChat.filter((msg) => msg.query_tag === "query").length
       ) {
-        handleSummary(userId, personaId, currentChat);
+        handleSummary(userId, personaId);
       }
     }
   }, [currentChat, isStreaming, chatHistory, chatHistoryNum]);
