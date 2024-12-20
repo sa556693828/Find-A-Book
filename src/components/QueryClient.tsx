@@ -21,6 +21,7 @@ const QueryClient = () => {
   const handleSummary = useCallback(
     async (userId: string, personaId: string, currentChat: Message[]) => {
       setSummaryLoading(true);
+      console.log("currentChat", currentChat);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
         const response = await fetch(`${baseUrl}/summary_query`, {
