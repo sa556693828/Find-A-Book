@@ -3,17 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #444444;
+  --background: #e8e8e8;
+  --foreground: #000000;
 }
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
-}
-textarea {
-  scrollbar-width: thin;
-  scrollbar-color: #4b5563 transparent;
 }
 /* 全局滾動條樣式 */
 ::-webkit-scrollbar {
@@ -37,15 +34,4 @@ textarea {
 * {
   scrollbar-width: thin;
   scrollbar-color: #4b5563 transparent;
-}
-
-/* 針對深色主題 */
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb {
-    background-color: #4b5563;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: #6b7280;
-  }
 }

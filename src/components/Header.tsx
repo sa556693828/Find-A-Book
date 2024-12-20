@@ -1,63 +1,52 @@
 "use client";
-import Image from "next/image";
+import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { FaUserCircle } from "react-icons/fa";
 
-export default function Header() {
+const Header = () => {
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/login";
+  const { logout } = useAuthStore();
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
   return (
-    <header className="h-[60px] px-8 border-b flex justify-between items-center bg-white/80 backdrop-blur">
-      {/* 左側Logo */}
-      <Link href="/" className="flex items-center">
-        <Image src="/tazzeLogo.png" alt="logo" width={150} height={40} />
-      </Link>
+    <header className="bg-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex justify-between items-center h-[52px]">
+          {/* Logo/網站名稱 */}
+          <div className="flex-shrink-0">
+            <Link href="/" className="text-black text-base font-medium">
+              /query-agent
+            </Link>
+          </div>
 
-      {/* 中間導航菜單 */}
-      <nav className="flex items-center gap-8">
-        <Link href="/" className="text-gray-700 hover:text-pink">
-          學堂
-        </Link>
-        <Link href="/" className="text-gray-700 hover:text-pink">
-          冊格子
-        </Link>
-        <Link href="/" className="text-gray-700 hover:text-pink">
-          二手書送你
-        </Link>
-      </nav>
-
-      {/* 右側用戶操作區 */}
-      <div className="flex items-center gap-4">
-        <Link href="/" className="text-gray-700 hover:text-pink">
-          登入
-        </Link>
-        <Link
-          href="/"
-          className="px-4 py-1 rounded-full bg-pink-500 text-pink hover:bg-pink-600"
-        >
-          註冊
-        </Link>
-        <Link href="/" className="text-gray-700 hover:text-pink">
-          會員中心
-        </Link>
-        <Link
-          href="/"
-          className="flex items-center gap-1 text-gray-700 hover:text-pink"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-          <span>購物車</span>
-        </Link>
+          {/* 導航選項 */}
+          <nav className="flex space-x-4 relative">
+            {!isLoginPage && (
+              <div>
+                <FaUserCircle
+                  className="text-black text-xl cursor-pointer"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                />
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-24 bg-white rounded-md shadow-lg py-1 z-10">
+                    <button
+                      onClick={logout}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      登出
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </nav>
+        </div>
       </div>
     </header>
   );
-}
+};
+
+export default Header;
