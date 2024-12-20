@@ -21,7 +21,6 @@ const QueryClient = () => {
   const handleSummary = useCallback(
     async (userId: string, personaId: string, currentChat: Message[]) => {
       setSummaryLoading(true);
-      console.log("currentChat", currentChat);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
         const response = await fetch(`${baseUrl}/summary_query`, {
@@ -138,12 +137,12 @@ const QueryClient = () => {
                       return updatedChat;
                     }
 
-                    // 如果最后一条不是 AI 消息，添加新的 AI 消息
+                    // 如果最后一条不是 AI 且不是 summary，添加新的 AI 消息
                     return [
                       ...prev,
                       {
                         role: "ai",
-                        content: lastMessage?.content || "",
+                        content: "",
                         book_list: parsedData.summary_books,
                         query_tag: "summary",
                       },
@@ -227,12 +226,12 @@ const QueryClient = () => {
                     return updatedChat;
                   }
 
-                  // 如果最后一条不是 AI 消息，添加新的 AI 消息
+                  // 如果最后一条不是 AI 消息 且不是 summary，添加新的 AI 消息
                   return [
                     ...prev,
                     {
                       role: "ai",
-                      content: lastMessage?.content || "",
+                      content: "",
                       book_list: parsedData.summary_books,
                       query_tag: "summary",
                     },
