@@ -10,7 +10,7 @@ interface BookListProps {
 }
 
 const BookList = ({
-  // chatHistory,
+  chatHistory,
   // isStreaming,
   currentChat,
 }: BookListProps) => {
@@ -29,25 +29,28 @@ const BookList = ({
   //   : [];
 
   return (
-    <div className="w-full h-full flex pl-16 flex-col gap-2 pr-4">
+    <div className="w-full h-full pb-2 overflow-y-auto flex pl-16 flex-col gap-2 pr-4">
       <p className="text-xs text-white">
-        {currentChat.filter((msg) => msg.query_tag === "summary").slice(-1)[0]
-          ?.content || ""}
+        {(!currentChat || currentChat.length === 0
+          ? chatHistory
+              ?.filter((msg) => msg.query_tag === "summary")
+              .slice(-1)[0]?.content
+          : currentChat
+              ?.filter((msg) => msg.query_tag === "summary")
+              .slice(-1)[0]?.content) || ""}{" "}
       </p>
-      <div className="h-[66vh] overflow-y-auto gap-2 flex pb-2 flex-col w-full rounded-b-lg">
-        {/* {books_distinct &&
-          books_distinct.length > 0 &&
-          books_distinct.map((book, index) => (
+      <div className="gap-2 flex flex-col w-full rounded-b-lg">
+        {(!currentChat || currentChat.length === 0
+          ? chatHistory?.[chatHistory.length - 1]?.book_list || []
+          : currentChat?.[currentChat.length - 1]?.book_list || []
+        )
+          .filter(
+            (book, index, self) =>
+              index === self.findIndex((b) => b.isbn === book.isbn)
+          )
+          .map((book, index) => (
             <BookRow key={index} book={book} />
-          ))} */}
-        {currentChat &&
-          currentChat.length > 0 &&
-          [...(currentChat[currentChat.length - 1].book_list || [])]
-            .filter(
-              (book, index, self) =>
-                index === self.findIndex((b) => b.isbn === book.isbn)
-            )
-            .map((book, index) => <BookRow key={index} book={book} />)}
+          ))}
       </div>
     </div>
   );

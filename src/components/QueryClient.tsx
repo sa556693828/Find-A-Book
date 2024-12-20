@@ -19,7 +19,7 @@ const QueryClient = () => {
   const [currentChat, setCurrentChat] = useState<Message[]>([]);
 
   const handleSummary = useCallback(
-    async (userId: string, personaId: string) => {
+    async (userId: string, personaId: string, currentChat: Message[]) => {
       setSummaryLoading(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
@@ -294,7 +294,7 @@ const QueryClient = () => {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-        setQueryLoading(false);
+        // setQueryLoading(false);
         while (true) {
           setIsStreaming(true);
           const { value, done } = await reader.read();
@@ -540,6 +540,7 @@ const QueryClient = () => {
           console.error("Unknown error:", error);
         }
       } finally {
+        setQueryLoading(false);
         setIsStreaming(false);
       }
     },
@@ -552,17 +553,16 @@ const QueryClient = () => {
       fetchChatHistory(userId, personaId);
     }
   }, [userId, personaId]);
-
   useEffect(() => {
     if (!isStreaming && !queryLoading) {
       if (
         currentChat &&
         chatHistory &&
         currentChat.length + chatHistory.length > 6 &&
-        chatHistoryNum !== currentChat.length
+        chatHistoryNum !==
+          currentChat.filter((msg) => msg.query_tag === "query").length
       ) {
-        console.log("handleSummary");
-        handleSummary(userId, personaId);
+        handleSummary(userId, personaId, currentChat);
       }
     }
   }, [currentChat, isStreaming, chatHistory, chatHistoryNum]);
@@ -596,7 +596,9 @@ const QueryClient = () => {
             chatHistory?.filter((message) => message.query_tag === "summary") ||
             []
           }
-          currentChat={currentChat}
+          currentChat={currentChat.filter(
+            (message) => message.query_tag === "summary"
+          )}
         />
       </div>
     </div>
