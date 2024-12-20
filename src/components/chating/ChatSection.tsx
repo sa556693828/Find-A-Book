@@ -30,10 +30,10 @@ const ChatSection = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   // const [bookListDistinct, setBookListDistinct] = useState<BookData[]>([]);
-  useEffect(() => {
-    console.log("isLoading", isLoading);
-    console.log("isStreaming", isStreaming);
-  }, [isLoading, isStreaming]);
+  // useEffect(() => {
+  //   console.log("isLoading", isLoading);
+  //   console.log("isStreaming", isStreaming);
+  // }, [isLoading, isStreaming]);
   const updateBookList = useCallback((isbn: string) => {
     console.log("isbn", isbn);
     // setBookListDistinct((prev) => {

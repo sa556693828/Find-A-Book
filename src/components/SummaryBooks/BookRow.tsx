@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import { BookData } from "@/types";
-// import Image from "next/image";
-// import { FaBook } from "react-icons/fa";
+import Image from "next/image";
+import { FaBook } from "react-icons/fa";
 
 interface BookRowProps {
   book: BookData;
@@ -16,10 +16,10 @@ const BookRow = ({ book }: BookRowProps) => {
       }}
       className="flex bg-white p-4 items-center cursor-pointer hover:bg-[#b6b6b6] gap-4 transition-all duration-300 rounded-[4px]"
     >
-      {/* {book?.book_id ? (
+      {book?.image ? (
         <Image
-          src={`https://media.taaze.tw/showThumbnail.html?sc=${book.book_id}&height=400&width=310`}
-          alt={book.book_title}
+          src={book.image}
+          alt={book.title}
           className="w-20 h-[110px]"
           width={400}
           height={310}
@@ -42,9 +42,9 @@ const BookRow = ({ book }: BookRowProps) => {
               </div>
             ))}
         </div>
-        <p className="text-sm font-bold">{book.book_title}</p>
-        <p className="text-sm text-black/50 line-clamp-3">{book.content}</p>
-      </div> */}
+        <p className="text-sm font-bold">{book.title}</p>
+        <p className="text-sm text-black/50 line-clamp-3">{book.description}</p>
+      </div>
     </div>
   );
 };

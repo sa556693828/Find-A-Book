@@ -8,38 +8,20 @@ import { usePersonaStore } from "@/store/usePersonaStore";
 import { BookData, Message } from "@/types";
 import React, { useCallback, useEffect, useState } from "react";
 
-// const books_distincts = [
-//   {
-//     book_id: "11101013428",
-//     book_title: "逆思維：華頓商學院最具影響力的教授，突破人生盲點的全局思考",
-//     book_url: "https://media.taaze.tw/products/11101013428.html",
-//     book_keywords: ["個人成長", "思維", "逆思維"],
-//     content:
-//       "從自己到他人，從他人到群體，從群體到社會。「逆思維」幫助我們用開放的心態，提升心智的彈性，建立良性的衝突，在瞬息萬變的世界中找到平衡點。真正的「知道」，就是承認自己的 ...",
-//   },
-// ];
-
 const QueryClient = () => {
   const { userId } = useAuthStore();
   const { personaId } = usePersonaStore();
   const { chatHistory, fetchChatHistory } = useChatHistoryStore();
-  const [summary] = useState("");
-  const [summaryBooks, setSummaryBooks] = useState<BookData[]>([]);
+  const [chatHistoryNum, setChatHistoryNum] = useState(0);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [queryLoading, setQueryLoading] = useState(false);
-  const [chatHistoryNum, setChatHistoryNum] = useState(
-    chatHistory && chatHistory.length ? chatHistory.length : 0
-  );
   const [isStreaming, setIsStreaming] = useState(false);
-  const [currentChat, setCurrentChat] = useState<Message[] | null>([]);
+  const [currentChat, setCurrentChat] = useState<Message[]>([]);
 
   const handleSummary = useCallback(
     async (userId: string, personaId: string) => {
       setSummaryLoading(true);
       try {
-        // setPrompts([]);
-        // setBooksLinks([]);
-        // setAiBooksLinks([]);
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
         const response = await fetch(`${baseUrl}/summary_query`, {
           method: "POST",
@@ -57,7 +39,6 @@ const QueryClient = () => {
         if (!response.body) {
           throw new Error("Response body is null");
         }
-        setChatHistoryNum(chatHistory?.length || 0);
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
@@ -86,14 +67,23 @@ const QueryClient = () => {
                 if (parsedData.summary) {
                   setCurrentChat((prev) => {
                     const lastMessage = prev?.[prev.length - 1];
-                    // 如果最後一條消息是AI的回應，則更新其內容
-                    if (lastMessage && lastMessage.role === "ai") {
+                    if (
+                      lastMessage &&
+                      lastMessage.role === "ai" &&
+                      lastMessage.query_tag === "summary"
+                    ) {
                       const updatedChat = [...prev];
-                      updatedChat[updatedChat.length - 1] = {
-                        role: "ai",
-                        content: lastMessage.content + parsedData.summary,
-                        query_tag: "summary",
-                      };
+                      const newContent = parsedData.summary;
+                      if (!lastMessage.content.endsWith(newContent)) {
+                        updatedChat[updatedChat.length - 1] = {
+                          ...lastMessage,
+                          content:
+                            lastMessage.content +
+                            newContent.slice(lastMessage.content.length),
+                          book_list: lastMessage.book_list,
+                          query_tag: "summary",
+                        };
+                      }
                       return updatedChat;
                     }
                     return [
@@ -101,15 +91,64 @@ const QueryClient = () => {
                       {
                         role: "ai",
                         content: parsedData.summary,
+                        book_list: lastMessage?.book_list || [],
                         query_tag: "summary",
                       },
                     ];
                   });
                 }
-                if (parsedData.summary_book_list)
-                  setSummaryBooks((prev) => {
-                    return [...(prev || []), ...parsedData.summary_book_list];
+                if (parsedData.summary_books) {
+                  setCurrentChat((prev) => {
+                    const lastMessage = prev?.[prev.length - 1];
+
+                    // 如果没有之前的消息，直接创建新消息
+                    if (!prev?.length) {
+                      return [
+                        {
+                          role: "ai",
+                          content: "",
+                          book_list: parsedData.summary_books,
+                          query_tag: "summary",
+                        },
+                      ];
+                    }
+
+                    // 如果最后一条是 AI 消息，更新它的 book_list
+                    if (
+                      lastMessage?.role === "ai" &&
+                      lastMessage.query_tag === "summary"
+                    ) {
+                      // 检查是否有重复的书籍
+                      const newBooks = parsedData.summary_books.filter(
+                        (book: BookData) =>
+                          !lastMessage.book_list?.includes(book)
+                      );
+
+                      if (newBooks.length === 0) return prev;
+
+                      const updatedChat = [...prev];
+                      updatedChat[updatedChat.length - 1] = {
+                        ...lastMessage,
+                        book_list: [
+                          ...(lastMessage.book_list || []),
+                          ...newBooks,
+                        ],
+                      };
+                      return updatedChat;
+                    }
+
+                    // 如果最后一条不是 AI 消息，添加新的 AI 消息
+                    return [
+                      ...prev,
+                      {
+                        role: "ai",
+                        content: lastMessage?.content || "",
+                        book_list: parsedData.summary_books,
+                        query_tag: "summary",
+                      },
+                    ];
                   });
+                }
               } catch (e) {
                 console.warn("Failed to parse line:", e);
               }
@@ -121,14 +160,23 @@ const QueryClient = () => {
               if (parsedData.summary) {
                 setCurrentChat((prev) => {
                   const lastMessage = prev?.[prev.length - 1];
-                  // 如果最後一條消息是AI的回應，則更新其內容
-                  if (lastMessage && lastMessage.role === "ai") {
+                  if (
+                    lastMessage &&
+                    lastMessage.role === "ai" &&
+                    lastMessage.query_tag === "summary"
+                  ) {
                     const updatedChat = [...prev];
-                    updatedChat[updatedChat.length - 1] = {
-                      role: "ai",
-                      content: lastMessage.content + parsedData.summary,
-                      query_tag: "summary",
-                    };
+                    const newContent = parsedData.summary;
+                    if (!lastMessage.content.endsWith(newContent)) {
+                      updatedChat[updatedChat.length - 1] = {
+                        ...lastMessage,
+                        content:
+                          lastMessage.content +
+                          newContent.slice(lastMessage.content.length),
+                        book_list: lastMessage.book_list,
+                        query_tag: "summary",
+                      };
+                    }
                     return updatedChat;
                   }
                   return [
@@ -136,21 +184,67 @@ const QueryClient = () => {
                     {
                       role: "ai",
                       content: parsedData.summary,
+                      book_list: lastMessage?.book_list || [],
                       query_tag: "summary",
                     },
                   ];
                 });
               }
-              if (parsedData.summary_book_list)
-                setSummaryBooks((prev) => {
-                  return [...(prev || []), ...parsedData.summary_book_list];
+              if (parsedData.summary_books) {
+                setCurrentChat((prev) => {
+                  const lastMessage = prev?.[prev.length - 1];
+
+                  // 如果没有之前的消息，直接创建新消息
+                  if (!prev?.length) {
+                    return [
+                      {
+                        role: "ai",
+                        content: "",
+                        book_list: parsedData.summary_books,
+                        query_tag: "summary",
+                      },
+                    ];
+                  }
+
+                  // 如果最后一条是 AI 消息，更新它的 book_list
+                  if (lastMessage?.role === "ai") {
+                    // 检查是否有重复的书籍
+                    const newBooks = parsedData.summary_books.filter(
+                      (book: BookData) => !lastMessage.book_list?.includes(book)
+                    );
+
+                    if (newBooks.length === 0) return prev;
+
+                    const updatedChat = [...prev];
+                    updatedChat[updatedChat.length - 1] = {
+                      ...lastMessage,
+                      book_list: [
+                        ...(lastMessage.book_list || []),
+                        ...newBooks,
+                      ],
+                    };
+                    return updatedChat;
+                  }
+
+                  // 如果最后一条不是 AI 消息，添加新的 AI 消息
+                  return [
+                    ...prev,
+                    {
+                      role: "ai",
+                      content: lastMessage?.content || "",
+                      book_list: parsedData.summary_books,
+                      query_tag: "summary",
+                    },
+                  ];
                 });
+              }
             } catch (e) {
               console.warn("Failed to parse final buffer:", e);
             }
           }
         } finally {
           reader.releaseLock();
+          setChatHistoryNum((prev) => prev + 1);
           setIsStreaming(false);
         }
       } catch (error: unknown) {
@@ -172,7 +266,7 @@ const QueryClient = () => {
       try {
         setCurrentChat((prev) => [
           ...(prev || []),
-          { role: "human", content: userQuery },
+          { role: "human", content: userQuery, query_tag: "query" },
         ]);
         // setPrompts([]);
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
@@ -196,6 +290,7 @@ const QueryClient = () => {
         if (!response.body) {
           throw new Error("Response body is null");
         }
+        setChatHistoryNum((prev) => prev + 1);
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
@@ -453,22 +548,24 @@ const QueryClient = () => {
 
   useEffect(() => {
     if (userId && personaId) {
-      setCurrentChat(null);
+      setCurrentChat([]);
       fetchChatHistory(userId, personaId);
     }
   }, [userId, personaId]);
 
   useEffect(() => {
-    if (!isStreaming) {
+    if (!isStreaming && !queryLoading) {
       if (
         currentChat &&
-        currentChat.length >= 6 &&
+        chatHistory &&
+        currentChat.length + chatHistory.length > 6 &&
         chatHistoryNum !== currentChat.length
       ) {
+        console.log("handleSummary");
         handleSummary(userId, personaId);
       }
     }
-  }, [currentChat, isStreaming, chatHistoryNum]);
+  }, [currentChat, isStreaming, chatHistory, chatHistoryNum]);
 
   return (
     <div
@@ -478,8 +575,12 @@ const QueryClient = () => {
       }}
     >
       <ChatSection
-        currentChat={currentChat || []}
-        chatHistory={chatHistory || []}
+        currentChat={currentChat.filter(
+          (message) => message.query_tag === "query"
+        )}
+        chatHistory={
+          chatHistory?.filter((message) => message.query_tag === "query") || []
+        }
         isStreaming={isStreaming}
         isLoading={summaryLoading || queryLoading}
         handleQuery={handleQuery}
@@ -491,9 +592,11 @@ const QueryClient = () => {
         </div>
         <BookList
           isStreaming={isStreaming}
-          summary={summary || ""}
-          chatHistory={chatHistory || []}
-          books={summaryBooks || []}
+          chatHistory={
+            chatHistory?.filter((message) => message.query_tag === "summary") ||
+            []
+          }
+          currentChat={currentChat}
         />
       </div>
     </div>
