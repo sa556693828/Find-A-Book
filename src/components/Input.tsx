@@ -36,6 +36,7 @@ const LLMInput = ({ handleSubmit }: LLMInputProps) => {
         setInputValue("");
         if (currentInput) {
           await handleSubmit(userId || "", currentInput, personaId || "");
+          adjustHeight();
         }
       }
     }

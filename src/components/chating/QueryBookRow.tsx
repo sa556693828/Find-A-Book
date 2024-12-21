@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { BookData } from "@/types";
 import { HiDotsHorizontal } from "react-icons/hi";
 import { BsFillHandThumbsDownFill } from "react-icons/bs";
+// import { FaBook } from "react-icons/fa";
+// import Image from "next/image";
 
 interface QueryBookRowProps {
   book: BookData;
@@ -35,16 +37,26 @@ const QueryBookRow = ({ book, updateBookList }: QueryBookRowProps) => {
       className="bg-[#D8D8D8] relative flex flex-col p-4 cursor-pointer hover:bg-[#b5b5b5] gap-4 transition-all duration-300 rounded-[4px]"
     >
       <div className="flex gap-1">
-        {book.book_keywords &&
-          book.book_keywords.length > 0 &&
-          book.book_keywords.map((keyword, index) => (
+        {book.keywords &&
+          book.keywords.length > 0 &&
+          book.keywords.map((keyword, index) => (
             <div
               key={index}
               className="rounded-[4px] bg-[#CAC3BB] p-[6px] text-[12px]"
             >
-              {keyword}
+              {keyword.split(" ").join("、")}
             </div>
           ))}
+        {/* {book.book_keywords &&
+            book.book_keywords.length > 0 &&
+            book.book_keywords.map((keyword, index) => (
+              <div
+                key={index}
+                className="rounded-[4px] bg-[#CAC3BB] p-[6px] text-[12px]"
+              >
+                {keyword}
+              </div>
+            ))} */}
       </div>
       <p className="text-sm font-bold">{book.title}</p>
       <div className="flex absolute top-2 right-2 items-center justify-center cursor-pointer menu-container">

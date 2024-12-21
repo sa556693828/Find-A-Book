@@ -23,7 +23,11 @@ const QueryClient = () => {
       setSummaryLoading(true);
       try {
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
-        const response = await fetch(`${baseUrl}/summary_query`, {
+        const route =
+          process.env.NODE_ENV === "development"
+            ? "summary_query_testing"
+            : "summary_query";
+        const response = await fetch(`${baseUrl}/${route}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -91,7 +95,7 @@ const QueryClient = () => {
                       {
                         role: "ai",
                         content: parsedData.summary,
-                        book_list: lastMessage?.book_list || [],
+                        book_list: [],
                         query_tag: "summary",
                       },
                     ];
@@ -136,7 +140,6 @@ const QueryClient = () => {
                       };
                       return updatedChat;
                     }
-
                     // 如果最后一条不是 AI 且不是 summary，添加新的 AI 消息
                     return [
                       ...prev,
@@ -184,7 +187,7 @@ const QueryClient = () => {
                     {
                       role: "ai",
                       content: parsedData.summary,
-                      book_list: lastMessage?.book_list || [],
+                      book_list: [],
                       query_tag: "summary",
                     },
                   ];
@@ -207,8 +210,10 @@ const QueryClient = () => {
                   }
 
                   // 如果最后一条是 AI 消息，更新它的 book_list
-                  if (lastMessage?.role === "ai") {
-                    // 检查是否有重复的书籍
+                  if (
+                    lastMessage?.role === "ai" &&
+                    lastMessage.query_tag === "summary"
+                  ) {
                     const newBooks = parsedData.summary_books.filter(
                       (book: BookData) => !lastMessage.book_list?.includes(book)
                     );
@@ -226,7 +231,7 @@ const QueryClient = () => {
                     return updatedChat;
                   }
 
-                  // 如果最后一条不是 AI 消息 且不是 summary，添加新的 AI 消息
+                  // 如果最后一条不是 AI 且不是 summary，添加新的 AI 消息
                   return [
                     ...prev,
                     {
@@ -269,8 +274,12 @@ const QueryClient = () => {
           { role: "human", content: userQuery, query_tag: "query" },
         ]);
         // setPrompts([]);
+        const route =
+          process.env.NODE_ENV === "development"
+            ? "query_search_chat_testing"
+            : "query_search_chat";
         const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
-        const response = await fetch(`${baseUrl}/query_search_chat`, {
+        const response = await fetch(`${baseUrl}/${route}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -558,7 +567,7 @@ const QueryClient = () => {
       if (
         currentChat &&
         chatHistory &&
-        currentChat.length + chatHistory.length > 6 &&
+        currentChat.length + chatHistory.length > 5 &&
         chatHistoryNum !==
           currentChat.filter((msg) => msg.query_tag === "query").length
       ) {

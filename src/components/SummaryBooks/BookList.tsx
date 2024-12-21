@@ -37,7 +37,7 @@ const BookList = ({
               .slice(-1)[0]?.content
           : currentChat
               ?.filter((msg) => msg.query_tag === "summary")
-              .slice(-1)[0]?.content) || ""}{" "}
+              .slice(-1)[0]?.content) || ""}
       </p>
       <div className="gap-2 flex flex-col w-full rounded-b-lg">
         {(!currentChat || currentChat.length === 0

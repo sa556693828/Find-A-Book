@@ -31,9 +31,9 @@ const BookRow = ({ book }: BookRowProps) => {
       )}
       <div className="flex flex-col flex-1 gap-3">
         <div className="flex gap-1">
-          {book.book_keywords &&
-            book.book_keywords.length > 0 &&
-            book.book_keywords.map((keyword, index) => (
+          {book.keywords &&
+            book.keywords.length > 0 &&
+            book.keywords.map((keyword, index) => (
               <div
                 key={index}
                 className="rounded-[4px] bg-[#CAC3BB] p-[6px] text-[12px]"

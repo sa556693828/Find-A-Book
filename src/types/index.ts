@@ -20,10 +20,10 @@ export interface Persona {
   system_prompt: string;
 }
 export interface BookData {
+  keywords: string[];
   description: string;
   image: string;
   isbn: string;
   link: string;
   title: string;
-  book_keywords?: string[];
 }
