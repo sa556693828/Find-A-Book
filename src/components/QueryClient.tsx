@@ -632,9 +632,9 @@ const QueryClient = () => {
       <div
         className={cn(
           "mx-auto relative rounded-lg flex flex-col bg-black h-[calc(100vh-60px)]",
-          "transition-all duration-500  ease-in-out-cubic transform",
+          "transition-all duration-500 ease-in-out-cubic transform",
           shouldShowFullWidth
-            ? "opacity-0 translate-x-full w-0"
+            ? "opacity-0 translate-x-full w-0 hidden"
             : "opacity-100 translate-x-0 w-1/2"
         )}
       >
