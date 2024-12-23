@@ -23,6 +23,7 @@ export default function Loading() {
           className="w-10 h-10 rounded-full"
           width={40}
           height={40}
+          unoptimized
         />
       ) : (
         <div className="w-10 h-10 rounded-full border border-amber-700"></div>

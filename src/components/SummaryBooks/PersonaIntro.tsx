@@ -35,6 +35,7 @@ const PersonaIntro = ({
             // }
             width={40}
             height={40}
+            unoptimized
             // onClick={() => {
             //   setModelOpen(true);
             //   setModelPersonaId(personaId);
@@ -59,52 +60,6 @@ const PersonaIntro = ({
           </p>
         </div>
       </div>
-      {/* {modelOpen && (
-        <div
-          onClick={() => setModelOpen(false)} // 點擊背景關閉
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()} // 防止點擊內容區域時關閉
-            className="bg-white flex flex-col rounded-lg max-w-md w-full"
-          >
-            <Image
-              src={personaIconMap[modelPersonaId]}
-              alt="persona"
-              width={1000}
-              height={1000}
-              className="w-full h-full rounded-t-lg"
-            />
-            <div className="flex flex-col gap-4 px-4 py-8">
-              <h3 className="text-2xl font-bold">
-                {
-                  personas.find((persona) => persona._id === modelPersonaId)
-                    ?.persona_name
-                }
-              </h3>
-              <p className="text-base leading-relaxed">
-                {isStreaming
-                  ? `等等，它還沒說完！請等待當前對話結束後再切換智能體。`
-                  : personas.find((persona) => persona._id === modelPersonaId)
-                      ?.intro}
-              </p>
-              <button
-                className="w-1/2 mx-auto bg-black text-white font-bold h-[42px] rounded-lg"
-                onClick={() => {
-                  if (isStreaming) {
-                    setModelOpen(false);
-                  } else {
-                    setModelOpen(false);
-                    setPersonaId(modelPersonaId);
-                  }
-                }}
-              >
-                {isStreaming ? `我知道了` : `看看我推薦你讀什麼書`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
     </>
   );
 };
