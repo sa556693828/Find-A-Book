@@ -23,6 +23,7 @@ const BookRow = ({ book }: BookRowProps) => {
           className="w-20 h-[110px]"
           width={400}
           height={310}
+          unoptimized
         />
       ) : (
         <div className="w-20 h-[110px] bg-transparent flex items-center justify-center">
