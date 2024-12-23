@@ -71,9 +71,9 @@ const LLMInput = ({
         handleSubmit(userId || "", inputValue, personaId || "");
       }}
       className={cn(
-        "flex gap-2 transition-all duration-300 ease-in-out",
+        "flex gap-2 transition-all duration-500 ease-in-out-cubic",
         shouldShowFullWidth
-          ? "w-[90%] mx-auto"
+          ? "w-[55%] mx-auto"
           : "fixed bottom-6 w-[calc((50%-6px)*0.9)] left-1/4 -translate-x-1/2",
         isLoading ? "opacity-70" : ""
       )}

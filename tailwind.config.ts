@@ -14,6 +14,9 @@ export default {
         pink: "#E3007F",
         grey: "#F6F6F6",
       },
+      transitionTimingFunction: {
+        "ease-in-out-cubic": "cubic-bezier(.65,1.51,.58,.92)",
+      },
     },
   },
   plugins: [],

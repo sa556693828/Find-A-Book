@@ -113,120 +113,127 @@ const ChatSection = ({
           />
         </div>
       </div>
-      {chatHistory && chatHistory.length === 0 && (
-        <div className="flex gap-4 justify-start">
-          {personaIcon ? (
-            <Image
-              src={personaIcon}
-              alt="personaIcon"
-              className="w-6 h-6 rounded-full"
-              width={40}
-              height={40}
-            />
-          ) : (
-            <div className="w-6 h-6 rounded-full flex-shrink-0 border border-amber-700"></div>
-          )}
-          <div className="flex flex-col gap-6">
-            <ReactMarkdown className="text-black bg-transparent max-w-2xl text-sm whitespace-pre-wrap">
-              {`你可以跟我說任何事情。如果有書想找的話，就直接告訴我吧；如果沒有的話，也可以隨便聊聊，沒關係的。`}
-            </ReactMarkdown>
-          </div>
-        </div>
-      )}
-      {chatHistory?.map((message: Message, index: number) => (
-        <div
-          key={index}
-          className={`flex gap-4 ${
-            message.role === "human" ? "justify-end" : "justify-start"
-          }`}
-        >
-          {message.role === "ai" &&
-            (personaIcon ? (
+      <div
+        className={cn(
+          "flex flex-col mx-auto gap-8",
+          shouldShowFullWidth ? "max-w-[50%]" : "max-w-full"
+        )}
+      >
+        {chatHistory && chatHistory.length === 0 && (
+          <div className="flex gap-4 justify-start ">
+            {personaIcon ? (
               <Image
                 src={personaIcon}
                 alt="personaIcon"
-                className="w-10 h-10 rounded-full"
+                className="w-6 h-6 rounded-full"
                 width={40}
                 height={40}
               />
             ) : (
-              <div className="w-10 h-10 rounded-full flex-shrink-0 border border-amber-700"></div>
-            ))}
-          <div className="flex flex-col gap-6">
-            <ReactMarkdown
-              className={`${
-                message.role === "human"
-                  ? "bg-black text-[#FFFFFF] p-4 rounded-3xl"
-                  : "text-black bg-transparent"
-              } max-w-2xl text-sm whitespace-pre-wrap`}
-            >
-              {message.content}
-            </ReactMarkdown>
-            {message.book_list && message.book_list.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {message.book_list.map((book, index) => (
-                  <QueryBookRow
-                    key={index}
-                    book={book}
-                    updateBookList={updateBookList}
-                  />
-                ))}
-              </div>
+              <div className="w-6 h-6 rounded-full flex-shrink-0 border border-amber-700"></div>
             )}
+            <div className="flex flex-col gap-6">
+              <ReactMarkdown className="text-black bg-transparent max-w-2xl text-sm whitespace-pre-wrap">
+                {`你可以跟我聊聊任何事情。如果有想找的書，隨時告訴我；如果只是想隨意聊聊，也沒關係。我會根據我們的對話，為你精選一份適合的書單，讓你的閱讀時光更加豐富有趣！`}
+              </ReactMarkdown>
+            </div>
           </div>
-        </div>
-      ))}
-      {currentChat?.map((message: Message, index: number) => (
-        <div
-          key={index}
-          className={`flex gap-4 ${
-            message.role === "human" ? "justify-end" : "justify-start"
-          }`}
-        >
-          {message.role === "ai" &&
-            (personaIcon ? (
-              <Image
-                src={personaIcon}
-                alt="personaIcon"
-                className="w-10 h-10 rounded-full"
-                width={40}
-                height={40}
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full flex-shrink-0 border border-amber-700"></div>
-            ))}
-          <div className="flex flex-col gap-6">
-            <ReactMarkdown
-              className={`${
-                message.role === "human"
-                  ? "bg-black text-[#FFFFFF] p-4 rounded-3xl"
-                  : "text-black bg-transparent"
-              } max-w-2xl text-sm whitespace-pre-wrap`}
-            >
-              {message.content}
-            </ReactMarkdown>
-            {message.book_list && message.book_list.length > 0 && (
-              <div className="flex flex-col gap-4">
-                {message.book_list.map((book, index) => (
-                  <QueryBookRow
-                    key={index}
-                    book={book}
-                    updateBookList={updateBookList}
-                  />
-                ))}
-              </div>
-            )}
+        )}
+        {chatHistory?.map((message: Message, index: number) => (
+          <div
+            key={index}
+            className={`flex gap-4 ${
+              message.role === "human" ? "justify-end" : "justify-start"
+            }`}
+          >
+            {message.role === "ai" &&
+              (personaIcon ? (
+                <Image
+                  src={personaIcon}
+                  alt="personaIcon"
+                  className="w-10 h-10 rounded-full"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full flex-shrink-0 border border-amber-700"></div>
+              ))}
+            <div className="flex flex-col gap-6">
+              <ReactMarkdown
+                className={`${
+                  message.role === "human"
+                    ? "bg-black text-[#FFFFFF] p-4 rounded-3xl"
+                    : "text-black bg-transparent"
+                } max-w-2xl text-sm whitespace-pre-wrap`}
+              >
+                {message.content}
+              </ReactMarkdown>
+              {message.book_list && message.book_list.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  {message.book_list.map((book, index) => (
+                    <QueryBookRow
+                      key={index}
+                      book={book}
+                      updateBookList={updateBookList}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+        ))}
+        {currentChat?.map((message: Message, index: number) => (
+          <div
+            key={index}
+            className={`flex gap-4 ${
+              message.role === "human" ? "justify-end" : "justify-start"
+            }`}
+          >
+            {message.role === "ai" &&
+              (personaIcon ? (
+                <Image
+                  src={personaIcon}
+                  alt="personaIcon"
+                  className="w-10 h-10 rounded-full"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full flex-shrink-0 border border-amber-700"></div>
+              ))}
+            <div className="flex flex-col gap-6">
+              <ReactMarkdown
+                className={`${
+                  message.role === "human"
+                    ? "bg-black text-[#FFFFFF] p-4 rounded-3xl"
+                    : "text-black bg-transparent"
+                } max-w-2xl text-sm whitespace-pre-wrap`}
+              >
+                {message.content}
+              </ReactMarkdown>
+              {message.book_list && message.book_list.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  {message.book_list.map((book, index) => (
+                    <QueryBookRow
+                      key={index}
+                      book={book}
+                      updateBookList={updateBookList}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {isLoading && <Loading />}
+        <div className="fixed bottom-8 w-full left-0 z-10">
+          <LLMInput
+            isLoading={isLoading}
+            handleSubmit={handleQuery}
+            proMessage={"proMessage"}
+            shouldShowFullWidth={shouldShowFullWidth}
+          />
         </div>
-      ))}
-      {isLoading && <Loading />}
-      <div className="fixed bottom-8 w-full left-0 z-10">
-        <LLMInput
-          isLoading={isLoading}
-          handleSubmit={handleQuery}
-          proMessage={"proMessage"}
-          shouldShowFullWidth={shouldShowFullWidth}
-        />
       </div>
     </div>
   );

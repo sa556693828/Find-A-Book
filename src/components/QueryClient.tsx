@@ -625,25 +625,24 @@ const QueryClient = () => {
         handleQuery={handleQuery}
         handleDeleteChatHistory={handleDeleteChatHistory}
         className={cn(
-          "transition-all duration-300 ease-in-out",
+          "transition-all duration-500 ease-in-out-cubic",
           shouldShowFullWidth ? "w-full" : "w-1/2"
         )}
       />
       <div
         className={cn(
           "mx-auto relative rounded-lg flex flex-col bg-black h-[calc(100vh-60px)]",
-          "transition-all duration-300 ease-in-out transform",
+          "transition-all duration-500  ease-in-out-cubic transform",
           shouldShowFullWidth
             ? "opacity-0 translate-x-full w-0"
             : "opacity-100 translate-x-0 w-1/2"
         )}
       >
-        <PersonaIntro />
+        <PersonaIntro currentChat={currentChat} chatHistory={chatHistory} />
         <div className="w-full mx-auto p-4">
           <div className="h-[1px] w-full bg-white/30" />
         </div>
         <BookList
-          isStreaming={isStreaming}
           chatHistory={
             chatHistory?.filter((message) => message.query_tag === "summary") ||
             []

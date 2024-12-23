@@ -3,17 +3,20 @@ import React from "react";
 import Image from "next/image";
 import { usePersonaStore } from "@/store/usePersonaStore";
 import { personaIconMap } from "@/constants/personaMapping";
+import { Message } from "@/types";
 
-const PersonaIntro = () => {
+const PersonaIntro = ({
+  currentChat,
+  chatHistory,
+}: {
+  currentChat: Message[];
+  chatHistory: Message[] | null;
+}) => {
   const { personaId, personas } = usePersonaStore();
-  // const [modelOpen, setModelOpen] = useState(false);
   const personaName = personas.find(
     (persona) => persona._id === personaId
   )?.persona_name;
 
-  const personaIntro = personas.find(
-    (persona) => persona._id === personaId
-  )?.intro;
   return (
     <>
       <div className="h-fit pt-4 pr-4 bg-black rounded-t-lg items-start flex w-full">
@@ -45,7 +48,15 @@ const PersonaIntro = () => {
               <p className="text-2xl opacity-30">智能體</p>
             </div>
           )}
-          {personaIntro && <p className="text-xs">{personaIntro}</p>}
+          <p className="text-xs">
+            {(!currentChat || currentChat.length === 0
+              ? chatHistory
+                  ?.filter((msg) => msg.query_tag === "summary")
+                  .slice(-1)[0]?.content
+              : currentChat
+                  ?.filter((msg) => msg.query_tag === "summary")
+                  .slice(-1)[0]?.content) || ""}
+          </p>
         </div>
       </div>
       {/* {modelOpen && (
