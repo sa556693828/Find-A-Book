@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePersonaStore } from "@/store/usePersonaStore";
 import React, { useRef, useState } from "react";
@@ -6,11 +7,18 @@ import React, { useRef, useState } from "react";
 interface LLMInputProps {
   handleSubmit: (userId: string, inputValue: string, personaId: string) => void;
   proMessage: string;
+  shouldShowFullWidth: boolean;
+  isLoading: boolean;
 }
 
-const LLMInput = ({ handleSubmit }: LLMInputProps) => {
+const LLMInput = ({
+  handleSubmit,
+  shouldShowFullWidth,
+  isLoading,
+}: LLMInputProps) => {
   const { userId } = useAuthStore();
   const { personaId } = usePersonaStore();
+  // const { sessionId } = useChatHistoryStore();
   const [inputValue, setInputValue] = useState("");
   const [isComposing, setIsComposing] = useState(false);
   const [isSubmitting] = useState(false);
@@ -23,6 +31,9 @@ const LLMInput = ({ handleSubmit }: LLMInputProps) => {
     }
   };
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isLoading) {
+      return;
+    }
     if (e.key === "Enter") {
       if (isComposing) {
         return;
@@ -54,11 +65,20 @@ const LLMInput = ({ handleSubmit }: LLMInputProps) => {
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        if (isLoading) {
+          return;
+        }
         handleSubmit(userId || "", inputValue, personaId || "");
       }}
-      className="flex gap-2 fixed bottom-6 w-[calc((50%-6px)*0.9)]  left-1/4 -translate-x-1/2"
+      className={cn(
+        "flex gap-2 transition-all duration-300 ease-in-out",
+        shouldShowFullWidth
+          ? "w-[90%] mx-auto"
+          : "fixed bottom-6 w-[calc((50%-6px)*0.9)] left-1/4 -translate-x-1/2",
+        isLoading ? "opacity-70" : ""
+      )}
     >
-      <div className="flex items-start w-full bg-black rounded-3xl ">
+      <div className="flex items-start w-full bg-black rounded-3xl">
         <textarea
           ref={textareaRef}
           rows={1}

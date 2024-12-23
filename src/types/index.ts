@@ -8,6 +8,8 @@ export interface Message {
 export interface UserHistory {
   user_id: string;
   persona_id: string;
+  session_id?: string;
+  title?: string;
   messages: Message[];
 }
 export interface Persona {

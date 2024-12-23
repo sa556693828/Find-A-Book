@@ -2,6 +2,7 @@
 import React from "react";
 import { Message } from "@/types";
 import BookRow from "./BookRow";
+import { RiBookShelfLine } from "react-icons/ri";
 
 interface BookListProps {
   chatHistory: Message[];
@@ -30,15 +31,19 @@ const BookList = ({
 
   return (
     <div className="w-full h-full pb-2 overflow-y-auto flex pl-16 flex-col gap-2 pr-4">
-      <p className="text-xs text-white">
-        {(!currentChat || currentChat.length === 0
+      <div className="flex gap-4 p-4 bg-[#3C3C3C] items-center rounded">
+        <RiBookShelfLine className="text-white" size={50} />
+        <p className="text-xs text-white">
+          {`以下的書單是根據您前三次的查詢精心推薦的。我們即將推出 Pro 版，將根據您的對話持續更新，支援無限次查詢，並提供更多豐富功能，敬請期待！`}
+          {/* {(!currentChat || currentChat.length === 0
           ? chatHistory
               ?.filter((msg) => msg.query_tag === "summary")
               .slice(-1)[0]?.content
           : currentChat
               ?.filter((msg) => msg.query_tag === "summary")
-              .slice(-1)[0]?.content) || ""}
-      </p>
+              .slice(-1)[0]?.content) || ""} */}
+        </p>
+      </div>
       <div className="gap-2 flex flex-col w-full rounded-b-lg">
         {(!currentChat || currentChat.length === 0
           ? chatHistory?.[chatHistory.length - 1]?.book_list || []

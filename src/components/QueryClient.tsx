@@ -2,27 +2,33 @@
 import ChatSection from "@/components/chating/ChatSection";
 import BookList from "@/components/SummaryBooks/BookList";
 import PersonaIntro from "@/components/SummaryBooks/PersonaIntro";
+import { cn } from "@/lib/utils";
 import { useChatHistoryStore } from "@/store/chatHistoryStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { usePersonaStore } from "@/store/usePersonaStore";
 import { BookData, Message } from "@/types";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 
 const QueryClient = () => {
   const { userId } = useAuthStore();
   const { personaId } = usePersonaStore();
-  const { chatHistory, fetchChatHistory } = useChatHistoryStore();
+  const { chatHistory, fetchChatHistory, deleteChatHistory } =
+    useChatHistoryStore();
   const [chatHistoryNum, setChatHistoryNum] = useState(0);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [queryLoading, setQueryLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentChat, setCurrentChat] = useState<Message[]>([]);
+  const [isSummary, setIsSummary] = useState(false);
 
   const handleSummary = useCallback(
     async (userId: string, personaId: string) => {
       setSummaryLoading(true);
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
+        const baseUrl =
+          process.env.NODE_ENV === "development"
+            ? `http://127.0.0.1:9001`
+            : process.env.NEXT_PUBLIC_NGROK_URL;
         const route =
           process.env.NODE_ENV === "development"
             ? "summary_query_testing"
@@ -250,6 +256,7 @@ const QueryClient = () => {
         } finally {
           reader.releaseLock();
           setChatHistoryNum((prev) => prev + 1);
+          setIsSummary(true);
           setIsStreaming(false);
         }
       } catch (error: unknown) {
@@ -274,11 +281,14 @@ const QueryClient = () => {
           { role: "human", content: userQuery, query_tag: "query" },
         ]);
         // setPrompts([]);
+        const baseUrl =
+          process.env.NODE_ENV === "development"
+            ? `http://127.0.0.1:9001`
+            : process.env.NEXT_PUBLIC_NGROK_URL;
         const route =
           process.env.NODE_ENV === "development"
             ? "query_search_chat_testing"
             : "query_search_chat";
-        const baseUrl = process.env.NEXT_PUBLIC_NGROK_URL;
         const response = await fetch(`${baseUrl}/${route}`, {
           method: "POST",
           headers: {
@@ -555,6 +565,12 @@ const QueryClient = () => {
     },
     []
   );
+  const handleDeleteChatHistory = () => {
+    deleteChatHistory(userId, personaId);
+    setCurrentChat([]);
+    setIsSummary(false);
+    // setCurrentBook([]);
+  };
 
   useEffect(() => {
     if (userId && personaId) {
@@ -562,28 +578,42 @@ const QueryClient = () => {
       fetchChatHistory(userId, personaId);
     }
   }, [userId, personaId]);
+
   useEffect(() => {
     if (!isStreaming && !queryLoading) {
       if (
         currentChat &&
         chatHistory &&
+        !isSummary &&
         currentChat.length + chatHistory.length > 5 &&
-        chatHistoryNum !==
-          currentChat.filter((msg) => msg.query_tag === "query").length
+        currentChat.filter((msg) => msg.query_tag === "summary").length === 0 &&
+        chatHistory.filter((msg) => msg.query_tag === "summary").length === 0
+        // chatHistoryNum !==
+        //   currentChat.filter((msg) => msg.query_tag === "query").length
       ) {
         handleSummary(userId, personaId);
       }
     }
-  }, [currentChat, isStreaming, chatHistory, chatHistoryNum]);
+  }, [currentChat, isStreaming, chatHistory, chatHistoryNum, isSummary]);
+
+  const shouldShowFullWidth = useMemo(() => {
+    const hasSummaryInHistory =
+      chatHistory?.some((message) => message.query_tag === "summary") || false;
+    const hasSummaryInCurrent =
+      currentChat?.some((message) => message.query_tag === "summary") || false;
+
+    return !(hasSummaryInHistory || hasSummaryInCurrent || isSummary);
+  }, [chatHistory, currentChat, isSummary]);
 
   return (
     <div
-      className="flex justify-start w-full gap-2 pb-2 px-2 bg-[#e8e8e8]"
+      className="flex justify-start w-full overflow-hidden gap-2 pb-2 px-2 bg-[#e8e8e8]"
       style={{
         height: "calc(100vh - 52px)",
       }}
     >
       <ChatSection
+        shouldShowFullWidth={shouldShowFullWidth}
         currentChat={currentChat.filter(
           (message) => message.query_tag === "query"
         )}
@@ -593,8 +623,21 @@ const QueryClient = () => {
         isStreaming={isStreaming}
         isLoading={summaryLoading || queryLoading}
         handleQuery={handleQuery}
+        handleDeleteChatHistory={handleDeleteChatHistory}
+        className={cn(
+          "transition-all duration-300 ease-in-out",
+          shouldShowFullWidth ? "w-full" : "w-1/2"
+        )}
       />
-      <div className="w-1/2 mx-auto relative rounded-lg flex flex-col bg-black h-[calc(100vh-60px)]">
+      <div
+        className={cn(
+          "mx-auto relative rounded-lg flex flex-col bg-black h-[calc(100vh-60px)]",
+          "transition-all duration-300 ease-in-out transform",
+          shouldShowFullWidth
+            ? "opacity-0 translate-x-full w-0"
+            : "opacity-100 translate-x-0 w-1/2"
+        )}
+      >
         <PersonaIntro />
         <div className="w-full mx-auto p-4">
           <div className="h-[1px] w-full bg-white/30" />

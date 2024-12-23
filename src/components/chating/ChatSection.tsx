@@ -8,13 +8,18 @@ import { personaIconMap } from "@/constants/personaMapping";
 import Image from "next/image";
 import LLMInput from "../Input";
 import QueryBookRow from "./QueryBookRow";
+import { TbTrash } from "react-icons/tb";
+import { cn } from "@/lib/utils";
 
 interface ChatSectionProps {
   currentChat?: Message[];
   chatHistory?: Message[];
-  isLoading?: boolean;
-  isStreaming?: boolean;
+  isLoading: boolean;
+  isStreaming: boolean;
+  shouldShowFullWidth: boolean;
   handleQuery: (userId: string, userQuery: string, personaId: string) => void;
+  handleDeleteChatHistory: () => void;
+  className?: string;
 }
 
 const ChatSection = ({
@@ -23,6 +28,9 @@ const ChatSection = ({
   isLoading,
   isStreaming,
   handleQuery,
+  handleDeleteChatHistory,
+  className,
+  shouldShowFullWidth,
 }: ChatSectionProps) => {
   const { personaId } = usePersonaStore();
   // const defaultPrompt = ["你好我想要找逆思維這本書！"];
@@ -92,8 +100,19 @@ const ChatSection = ({
   return (
     <div
       ref={chatContainerRef}
-      className="w-1/2 mx-auto relative bg-[#FFFFFF] rounded-lg px-6 pt-6 pb-24 gap-8 flex flex-col h-full overflow-y-auto"
+      className={cn(
+        "mx-auto relative bg-[#FFFFFF] rounded-lg px-6 pt-6 pb-24 gap-8 flex flex-col h-full overflow-y-auto",
+        className
+      )}
     >
+      <div className="sticky top-0 left-0 z-10 -mb-[44px]">
+        <div className="flex justify-start relative">
+          <TbTrash
+            className="w-4 h-4 cursor-pointer absolute -top-4 -left-4"
+            onClick={() => handleDeleteChatHistory()}
+          />
+        </div>
+      </div>
       {chatHistory && chatHistory.length === 0 && (
         <div className="flex gap-4 justify-start">
           {personaIcon ? (
@@ -111,9 +130,6 @@ const ChatSection = ({
             <ReactMarkdown className="text-black bg-transparent max-w-2xl text-sm whitespace-pre-wrap">
               {`你可以跟我說任何事情。如果有書想找的話，就直接告訴我吧；如果沒有的話，也可以隨便聊聊，沒關係的。`}
             </ReactMarkdown>
-            {/* {defaultPrompt && (
-              <PromptList prompts={defaultPrompt} handleQuery={handleQuery} />
-            )} */}
           </div>
         </div>
       )}
@@ -204,7 +220,14 @@ const ChatSection = ({
         </div>
       ))}
       {isLoading && <Loading />}
-      <LLMInput handleSubmit={handleQuery} proMessage={"proMessage"} />
+      <div className="fixed bottom-8 w-full left-0 z-10">
+        <LLMInput
+          isLoading={isLoading}
+          handleSubmit={handleQuery}
+          proMessage={"proMessage"}
+          shouldShowFullWidth={shouldShowFullWidth}
+        />
+      </div>
     </div>
   );
 };
