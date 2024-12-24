@@ -16,8 +16,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Find A Book",
-  description: "Find A Book",
+  title: "Find A Book v0.2.2",
+  description: "Find A Book v0.2.2",
   icons: {
     icon: "/favicon.ico",
   },
